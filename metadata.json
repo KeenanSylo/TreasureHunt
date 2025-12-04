@@ -1,0 +1,5 @@
+{
+  "name": "TreasureHunt",
+  "description": "A high-fidelity dashboard for identifying undervalued 'hidden gem' listings on marketplaces using vague keyword matching and visual verification logic.",
+  "requestFramePermissions": []
+}

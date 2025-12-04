@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TreasureHunt - Hidden Gem Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: '#FFFFFF',
+              surface: '#F8F9FA',
+              primary: '#DC2626', // Vibrant Crimson Red
+              primaryHover: '#B91C1C',
+              secondary: '#1F2937', // Dark Charcoal
+              subtle: '#9CA3AF',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+              'pulse-slow': 'pulseRed 3s infinite',
+              'ticker': 'ticker 40s linear infinite',
+              'bell-shake': 'shake 3s cubic-bezier(.36,.07,.19,.97) infinite',
+              'shine': 'shine 3s infinite',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              pulseRed: {
+                '0%, 100%': { boxShadow: '0 0 0 0 rgba(220, 38, 38, 0.0)' },
+                '50%': { boxShadow: '0 0 15px 0 rgba(220, 38, 38, 0.3)' },
+              },
+              ticker: {
+                '0%': { transform: 'translateX(0)' },
+                '100%': { transform: 'translateX(-50%)' },
+              },
+              shake: {
+                '0%, 100%': { transform: 'rotate(0deg)' },
+                '10%': { transform: 'rotate(-10deg)' },
+                '20%': { transform: 'rotate(10deg)' },
+                '30%': { transform: 'rotate(-10deg)' },
+                '40%': { transform: 'rotate(10deg)' },
+                '50%': { transform: 'rotate(0deg)' },
+              },
+              shine: {
+                '0%': { transform: 'translateX(-100%)' },
+                '20%': { transform: 'translateX(100%)' },
+                '100%': { transform: 'translateX(100%)' },
+              }
+            }
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background-color: #FFFFFF;
+        color: #1F2937;
+        font-family: 'Inter', sans-serif;
+      }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #F3F4F6; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #D1D5DB; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9CA3AF; 
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      }
+      .glass-card {
+        background: #FFFFFF;
+        border: 1px solid #F3F4F6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .glass-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(220, 38, 38, 0.15), 0 8px 10px -6px rgba(220, 38, 38, 0.1);
+        border-color: rgba(220, 38, 38, 0.3);
+      }
+      .btn-shine {
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-shine::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+        transform: skewX(-20deg) translateX(-150%);
+        animation: shine 6s infinite;
+      }
+      .text-glow {
+        text-shadow: 0 0 20px rgba(220, 38, 38, 0.2);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
