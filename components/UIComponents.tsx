@@ -66,7 +66,7 @@ export const Button = ({
 export const ProfitPill = ({ price, value }: { price: number, value: number }) => {
   const profit = value - price;
   return (
-    <div className="flex items-center space-x-1 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full text-xs text-red-600 font-bold shadow-sm animate-pulse-slow">
+    <div className="flex items-center space-x-1 bg-white/90 backdrop-blur-md border border-red-100 px-3 py-1.5 rounded-full text-xs text-red-600 font-bold shadow-sm animate-pulse-slow">
        <TrendingUp className="w-3.5 h-3.5" />
        <span>+${profit.toLocaleString()} POTENTIAL</span>
     </div>
@@ -74,8 +74,7 @@ export const ProfitPill = ({ price, value }: { price: number, value: number }) =
 };
 
 export const ConfidenceBar = ({ score }: { score: number }) => {
-  let color = 'bg-red-600'; // Primary accent for all bars per request for "Urgent Red" theme
-  // We can vary opacity or shade if needed, but keeping it unified clean red looks premium.
+  let color = 'bg-red-600'; 
 
   return (
     <div className="w-full">

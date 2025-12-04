@@ -39,16 +39,16 @@ export const SearchResults = () => {
           </h3>
           
           <div className="space-y-6">
-            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="glass-panel p-5 rounded-2xl">
               <label className="text-xs font-bold text-slate-700 mb-3 block">Price Range</label>
               <div className="flex items-center space-x-2">
-                <input type="number" placeholder="Min" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
+                <input type="number" placeholder="Min" className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
                 <span className="text-slate-400">-</span>
-                <input type="number" placeholder="Max" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
+                <input type="number" placeholder="Max" className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="glass-panel p-5 rounded-2xl">
               <label className="text-xs font-bold text-slate-700 mb-3 block">Marketplace</label>
               <div className="space-y-3">
                 {['eBay', 'FB Marketplace', 'Vinted', 'Craigslist'].map(m => (
@@ -65,7 +65,7 @@ export const SearchResults = () => {
               </div>
             </div>
             
-             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+             <div className="glass-panel p-5 rounded-2xl">
               <label className="text-xs font-bold text-slate-700 mb-3 block">Min. Confidence</label>
                <input type="range" min="0" max="100" className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#DC2626]" />
                <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium">
@@ -79,7 +79,7 @@ export const SearchResults = () => {
 
       {/* Results Feed */}
       <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-2">
-        <div className="flex items-center justify-between mb-8 sticky top-0 bg-white/90 backdrop-blur-md py-4 z-20 border-b border-slate-100">
+        <div className="flex items-center justify-between mb-8 sticky top-0 bg-white/60 backdrop-blur-xl py-4 z-20 border-b border-white/20">
           <h2 className="text-xl font-bold text-slate-900">
             {searchQuery ? (
                 <span>
@@ -87,7 +87,7 @@ export const SearchResults = () => {
                 </span>
             ) : 'Trending Opportunities'}
           </h2>
-          <div className="flex space-x-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+          <div className="flex space-x-2 bg-white/40 p-1 rounded-lg border border-white/50 backdrop-blur-md">
             {['All', 'High Profit', 'Newest'].map(filter => (
               <button 
                 key={filter}
@@ -110,7 +110,7 @@ export const SearchResults = () => {
             return (
               <div 
                 key={item.id} 
-                className="group relative flex flex-col sm:flex-row bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.1)] hover:border-red-200 transition-all duration-300"
+                className="group relative flex flex-col sm:flex-row bg-white/60 backdrop-blur-md border border-white/60 rounded-3xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.1)] hover:border-red-200 transition-all duration-300 hover:bg-white/80"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 {/* Image Section */}
@@ -143,12 +143,12 @@ export const SearchResults = () => {
                     <ConfidenceBar score={item.confidenceScore} />
                   </div>
                   
-                  <div className="mt-5 pt-5 border-t border-slate-100 flex items-center justify-between">
+                  <div className="mt-5 pt-5 border-t border-slate-100/50 flex items-center justify-between">
                      <div className="flex items-center space-x-4 text-xs font-medium text-slate-400">
                        <span>{item.condition}</span>
-                       <span className="text-slate-200">•</span>
+                       <span className="text-slate-300">•</span>
                        <span>{item.category}</span>
-                       <span className="text-slate-200">•</span>
+                       <span className="text-slate-300">•</span>
                        <span>{item.listingDate}</span>
                      </div>
                      <div className="font-mono text-[#DC2626] font-bold text-lg">
@@ -167,7 +167,7 @@ export const SearchResults = () => {
                     className={`p-2.5 rounded-full backdrop-blur-md border transition-all shadow-sm ${
                       isSaved 
                         ? 'bg-red-50 border-red-100 text-red-600' 
-                        : 'bg-white/80 border-slate-100 text-slate-400 hover:text-red-500 hover:bg-white'
+                        : 'bg-white/40 border-slate-100 text-slate-400 hover:text-red-500 hover:bg-white'
                     }`}
                   >
                     <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />

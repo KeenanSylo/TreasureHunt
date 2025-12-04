@@ -1,12 +1,98 @@
-import React, { useContext, useState } from 'react';
-import { Search, ArrowRight, Sparkles, Zap, DollarSign } from 'lucide-react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
+import { Search, ArrowRight, Sparkles, Zap, TrendingUp } from 'lucide-react';
 import { NavContext } from '../App';
 import { MOCK_ITEMS } from '../mockData';
 import { Badge, Button, ProfitPill, ConfidenceBar } from '../components/UIComponents';
 
+const HiddenGemsReveal = () => {
+  const [mousePos, setMousePos] = useState({ x: -200, y: -200 }); // Start off-screen
+  const containerRef = useRef<HTMLSpanElement>(null);
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleMouseLeave = () => {
+     // Optional: animate it away or just leave it
+     // setMousePos({ x: -200, y: -200 });
+  };
+
+  return (
+     <span 
+       ref={containerRef}
+       className="relative inline-block cursor-crosshair align-bottom px-2 select-none"
+       onMouseMove={handleMouseMove}
+       onMouseLeave={handleMouseLeave}
+     >
+        {/* Base Layer - Standard Red/Orange Gradient */}
+        <span 
+           className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-[#DC2626] to-orange-600 block"
+           style={{
+             WebkitMaskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, transparent 30%, black 70%)`,
+             maskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, transparent 30%, black 70%)`
+           }}
+        >
+          Hidden Gems
+        </span>
+
+        {/* Reveal Layer - Same Font, but with Gold/Diamond "Design" */}
+        <span 
+           className="absolute inset-0 z-20 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 block pointer-events-none"
+           style={{
+              // Use inherited font (Inter) instead of Playfair
+              fontFamily: 'inherit',
+              fontWeight: 800, // Matching the base font weight
+              textShadow: '0px 2px 4px rgba(180, 83, 9, 0.4)', // Slightly stronger shadow for depth
+              transform: 'scale(1.0)', // Keep scale consistent
+              WebkitMaskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, black 30%, transparent 70%)`,
+              maskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, black 30%, transparent 70%)`
+           }}
+        >
+          Hidden Gems
+        </span>
+     </span>
+  );
+};
+
 export const Home = () => {
   const { navigateTo, setSearchQuery } = useContext(NavContext);
   const [localQuery, setLocalQuery] = useState('');
+  const [placeholderText, setPlaceholderText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [loopNum, setLoopNum] = useState(0);
+  const [typingSpeed, setTypingSpeed] = useState(150);
+
+  const phrases = ["Old Film Camera...", "Mid-Century Chair...", "Vintage Rolex...", "Designer Lamp..."];
+
+  useEffect(() => {
+    const handleTyping = () => {
+      const i = loopNum % phrases.length;
+      const fullText = phrases[i];
+
+      setPlaceholderText(
+        isDeleting 
+          ? fullText.substring(0, placeholderText.length - 1) 
+          : fullText.substring(0, placeholderText.length + 1)
+      );
+
+      setTypingSpeed(isDeleting ? 50 : 150);
+
+      if (!isDeleting && placeholderText === fullText) {
+        setTimeout(() => setIsDeleting(true), 2000); // Pause at end
+      } else if (isDeleting && placeholderText === '') {
+        setIsDeleting(false);
+        setLoopNum(loopNum + 1);
+      }
+    };
+
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [placeholderText, isDeleting, loopNum, phrases, typingSpeed]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,76 +102,91 @@ export const Home = () => {
     }
   };
 
-  const trendingItems = MOCK_ITEMS.slice(0, 4);
-
   return (
     <div className="space-y-16 max-w-7xl mx-auto">
       {/* Hero Section */}
-      <section className="relative py-20 text-center animate-fade-in-up">
-        {/* Decorative background elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-red-50 rounded-full blur-[120px] -z-10 pointer-events-none opacity-60" />
+      <section className="relative py-16 text-center animate-fade-in-up z-10">
         
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-50 border border-red-100 text-red-600 text-sm font-bold mb-8 animate-bounce">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm text-red-600 text-sm font-bold mb-8 animate-float">
             <Sparkles className="w-4 h-4" />
             <span>AI-Powered Arbitrage Engine V2.0</span>
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-slate-900 leading-tight">
-          Find <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#DC2626] to-orange-600 relative">
-            Hidden Gems
-            <svg className="absolute w-full h-3 -bottom-1 left-0 text-red-200 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
-               <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
-            </svg>
-          </span> <br />
+        <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-tight">
+          Find{' '} 
+          <HiddenGemsReveal />
+          <br />
           Before They Vanish.
         </h1>
         
-        <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-12 font-medium">
+        <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium">
           The world's first visual search engine for arbitrage. <br/>
-          Search for "old camera" and we'll identify a "Leica M6".
+          Search for vague titles, discover real value.
         </p>
 
-        <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative group z-10">
-          <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-            <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#DC2626] transition-colors duration-300" />
+        {/* Enhanced Search Bar */}
+        <div className="max-w-3xl mx-auto relative group z-20">
+          <form onSubmit={handleSearch} className="relative">
+            <div className="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
+              <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#DC2626] transition-colors duration-300" />
+            </div>
+            <input
+              type="text"
+              value={localQuery}
+              onChange={(e) => setLocalQuery(e.target.value)}
+              className="block w-full pl-16 pr-36 py-6 border-0 rounded-full bg-white/80 backdrop-blur-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 transition-all duration-300 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] focus:shadow-[0_20px_50px_-12px_rgba(220,38,38,0.2)] text-xl font-medium"
+              placeholder={`Try searching: ${placeholderText}`}
+            />
+            <div className="absolute inset-y-2 right-2">
+              <Button size="lg" type="submit" className="rounded-full h-full px-8 shadow-red-500/30 text-lg">
+                Search
+              </Button>
+            </div>
+          </form>
+
+          {/* Quick Tags */}
+          <div className="mt-6 flex flex-wrap justify-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <span className="text-sm font-bold text-slate-400 mr-2 py-2">Trending:</span>
+            {['Cameras', 'Furniture', 'Watches', 'Sneakers', 'Vinyl'].map((tag) => (
+              <button
+                key={tag}
+                onClick={() => {
+                  setSearchQuery(tag);
+                  navigateTo('search');
+                }}
+                className="px-4 py-1.5 rounded-full bg-white/50 border border-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer backdrop-blur-sm"
+              >
+                {tag}
+              </button>
+            ))}
           </div>
-          <input
-            type="text"
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            className="block w-full pl-14 pr-32 py-5 border-2 border-slate-100 rounded-full bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#DC2626] focus:ring-4 focus:ring-red-500/10 transition-all duration-300 shadow-xl shadow-slate-200/50 text-lg font-medium"
-            placeholder="What generic item are you looking for?"
-          />
-          <div className="absolute inset-y-2 right-2">
-            <Button size="lg" type="submit" className="rounded-full h-full px-8 shadow-red-500/20">
-              Search
-            </Button>
-          </div>
-        </form>
+        </div>
       </section>
 
       {/* Ticker Section - Continuous Scroll */}
-      <section className="w-full overflow-hidden border-y border-slate-100 bg-slate-50/50 py-4 relative">
-         <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10"></div>
-         <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10"></div>
+      <section className="w-full overflow-hidden border-y border-white/40 bg-white/30 backdrop-blur-sm py-4 relative group">
+         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
+         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
          
-         <div className="flex animate-ticker w-max gap-8 hover:[animation-play-state:paused]">
-            {[...MOCK_ITEMS, ...MOCK_ITEMS].map((item, idx) => (
+         <div className="flex animate-ticker w-max gap-6 hover:[animation-play-state:paused]">
+            {[...MOCK_ITEMS, ...MOCK_ITEMS, ...MOCK_ITEMS].map((item, idx) => (
               <div 
                 key={`${item.id}-${idx}`} 
-                className="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm min-w-[300px] cursor-pointer hover:border-red-300 transition-colors"
+                className="flex items-center space-x-3 bg-white/80 px-4 py-2.5 rounded-xl border border-white shadow-sm min-w-[320px] cursor-pointer hover:border-red-300 transition-all hover:shadow-lg hover:-translate-y-1"
                 onClick={() => navigateTo('detail', item)}
               >
-                  <img src={item.imageUrl} className="w-10 h-10 rounded-md object-cover" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                       <span className="font-bold text-slate-900 text-sm truncate max-w-[120px]">{item.realTitle}</span>
-                       <span className="text-[10px] bg-red-100 text-red-700 px-1.5 rounded-sm font-bold">FOUND</span>
+                  <img src={item.imageUrl} className="w-12 h-12 rounded-lg object-cover" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center mb-0.5">
+                       <span className="font-bold text-slate-900 text-sm truncate">{item.realTitle}</span>
+                       <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">FOUND</span>
                     </div>
-                    <div className="text-xs text-slate-500 flex items-center gap-1">
-                       <span className="line-through">${item.listingPrice}</span>
-                       <ArrowRight className="w-3 h-3 text-red-500" />
-                       <span className="font-bold text-slate-900">${item.realValue}</span>
+                    <div className="text-xs text-slate-500 flex items-center justify-between">
+                       <span className="line-through opacity-70">${item.listingPrice}</span>
+                       <div className="flex items-center text-green-600 font-bold">
+                         <TrendingUp className="w-3 h-3 mr-1" />
+                         +${item.realValue - item.listingPrice}
+                       </div>
                     </div>
                   </div>
               </div>
@@ -93,96 +194,110 @@ export const Home = () => {
          </div>
       </section>
 
-      {/* Bento Grid */}
-      <section>
+      {/* Featured Opportunities (Bento Grid) */}
+      <section className="pb-20">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-red-100 rounded-lg">
+            <div className="p-2.5 bg-red-100 rounded-xl">
               <Zap className="w-5 h-5 text-red-600" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Featured Opportunities</h2>
+            <h2 className="text-3xl font-bold text-slate-900">Featured Opportunities</h2>
           </div>
-          <button onClick={() => navigateTo('search')} className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors flex items-center group">
-            View all
-            <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+          <button 
+            onClick={() => navigateTo('search')} 
+            className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors flex items-center group bg-white px-4 py-2 rounded-full border border-red-100 hover:border-red-200 shadow-sm"
+          >
+            View All <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[340px]">
-          {/* Main Feature Card - Spans 2 cols */}
+        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[650px]">
+          {/* Main Large Item */}
           <div 
-            className="md:col-span-2 relative group overflow-hidden rounded-[2rem] glass-card cursor-pointer border-0"
-            onClick={() => navigateTo('detail', trendingItems[0])}
+            onClick={() => navigateTo('detail', MOCK_ITEMS[0])}
+            className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-500 border border-white"
           >
-             <img 
-                src={trendingItems[0].imageUrl} 
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                alt="Main item"
-              />
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
-              
-              <div className="absolute top-6 left-6">
-                 <Badge variant="danger" className="bg-[#DC2626] text-white border-none shadow-lg shadow-red-500/40 animate-pulse-slow">
-                   🔥 High Profit Alert
-                 </Badge>
-              </div>
+            <div className="absolute inset-0 bg-slate-900 group-hover:bg-red-950 transition-colors duration-500"></div>
+            <img 
+              src={MOCK_ITEMS[0].imageUrl} 
+              alt={MOCK_ITEMS[0].realTitle} 
+              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+            
+            <div className="absolute top-6 left-6 flex gap-2">
+               <Badge variant="primary" className="bg-red-600 text-white border-none shadow-lg animate-pulse-slow">
+                 98% MATCH
+               </Badge>
+            </div>
 
-              <div className="absolute bottom-0 left-0 p-8 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                <div className="flex justify-between items-end">
-                  <div className="text-white">
-                    <p className="text-slate-300 text-lg line-through decoration-red-500 decoration-2 mb-1 opacity-80">{trendingItems[0].listingTitle}</p>
-                    <h3 className="text-4xl font-extrabold mb-3 text-white text-glow">{trendingItems[0].realTitle}</h3>
-                    <div className="flex items-center space-x-4 text-sm font-medium text-slate-200">
-                      <span className="bg-white/10 px-2 py-1 rounded backdrop-blur-md">{trendingItems[0].marketplace}</span>
-                      <span>•</span>
-                      <span>{trendingItems[0].listingDate}</span>
-                    </div>
+            <div className="absolute bottom-0 left-0 right-0 p-8">
+               <div className="mb-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                  <h3 className="text-3xl font-black text-white mb-2 leading-tight">{MOCK_ITEMS[0].realTitle}</h3>
+                  <p className="text-slate-300 text-sm line-through">Listed as: {MOCK_ITEMS[0].listingTitle}</p>
+               </div>
+               
+               <div className="flex items-center justify-between border-t border-white/20 pt-4">
+                  <div>
+                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Est. Profit</span>
+                    <p className="text-2xl font-bold text-[#10B981]">+${(MOCK_ITEMS[0].realValue - MOCK_ITEMS[0].listingPrice).toLocaleString()}</p>
                   </div>
-                  <div className="text-right bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 group-hover:bg-white group-hover:text-slate-900 transition-all duration-300">
-                    <p className="text-xs uppercase tracking-wide opacity-70 mb-1">Potential Profit</p>
-                    <p className="text-3xl font-extrabold text-[#DC2626]">+${(trendingItems[0].realValue - trendingItems[0].listingPrice).toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
+                  <Button variant="primary" className="rounded-full px-6">View Details</Button>
+               </div>
+            </div>
           </div>
 
-          {/* Secondary Cards */}
-          {trendingItems.slice(1).map((item) => (
+          {/* Secondary Tall Item */}
+          <div 
+            onClick={() => navigateTo('detail', MOCK_ITEMS[1])}
+            className="md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-white bg-white"
+          >
+             <div className="h-1/2 overflow-hidden relative">
+                <img src={MOCK_ITEMS[1].imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute top-4 right-4">
+                  <ProfitPill price={MOCK_ITEMS[1].listingPrice} value={MOCK_ITEMS[1].realValue} />
+                </div>
+             </div>
+             <div className="p-6 h-1/2 flex flex-col justify-between">
+                <div>
+                   <h4 className="font-bold text-slate-900 text-lg mb-1 leading-snug">{MOCK_ITEMS[1].realTitle}</h4>
+                   <p className="text-xs text-slate-400">Found on {MOCK_ITEMS[1].marketplace}</p>
+                </div>
+                <div className="mt-4">
+                   <div className="flex justify-between text-sm mb-1">
+                      <span className="text-slate-500">Confidence</span>
+                      <span className="font-bold text-slate-900">{MOCK_ITEMS[1].confidenceScore}%</span>
+                   </div>
+                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-red-500 w-[88%]"></div>
+                   </div>
+                </div>
+             </div>
+          </div>
+
+          {/* Small Items */}
+          {MOCK_ITEMS.slice(2, 4).map((item) => (
             <div 
               key={item.id}
-              className="relative group overflow-hidden rounded-[2rem] glass-card cursor-pointer flex flex-col p-4 hover:border-red-200"
               onClick={() => navigateTo('detail', item)}
+              className="md:col-span-1 md:row-span-1 glass-card p-5 rounded-3xl relative group cursor-pointer flex flex-col justify-between"
             >
-              <div className="relative h-40 overflow-hidden rounded-2xl mb-4">
-                <img 
-                  src={item.imageUrl} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  alt={item.realTitle}
-                />
-                <div className="absolute top-2 right-2">
-                  <span className="bg-white/90 backdrop-blur text-slate-900 text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
-                    {item.confidenceScore}% Match
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                    <p className="text-slate-400 text-xs line-through mb-1">{item.listingTitle}</p>
-                    <p className="font-bold text-slate-900 text-lg leading-tight group-hover:text-[#DC2626] transition-colors">{item.realTitle}</p>
-                </div>
-                
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                  <div>
-                      <p className="text-xs text-slate-400">Profit</p>
-                      <p className="text-[#DC2626] font-extrabold text-lg">+${(item.realValue - item.listingPrice).toLocaleString()}</p>
+               <div className="flex items-start justify-between mb-2">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden">
+                     <img src={item.imageUrl} className="w-full h-full object-cover" />
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#DC2626] transition-all duration-300 group-hover:rotate-[-45deg]">
-                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
+                  <div className="text-right">
+                     <span className="block font-bold text-green-600">+${item.realValue - item.listingPrice}</span>
                   </div>
-                </div>
-              </div>
+               </div>
+               <div>
+                  <h4 className="font-bold text-slate-900 text-sm line-clamp-2 mb-1 group-hover:text-red-600 transition-colors">
+                    {item.realTitle}
+                  </h4>
+                  <p className="text-xs text-slate-400 uppercase font-bold tracking-wide">
+                    {item.marketplace}
+                  </p>
+               </div>
             </div>
           ))}
         </div>
