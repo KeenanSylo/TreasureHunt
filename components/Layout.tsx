@@ -48,49 +48,14 @@ const SidebarItem = ({
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { currentView, navigateTo } = useContext(NavContext);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      // Small delay for smoother feel
-      requestAnimationFrame(() => {
-        setMousePosition({ x: event.clientX, y: event.clientY });
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  
+  const isHome = currentView === 'home';
 
   return (
-    <div className="flex min-h-screen overflow-hidden bg-white font-sans relative selection:bg-red-100 selection:text-red-600">
+    <div className="flex h-screen overflow-hidden bg-white font-sans relative selection:bg-red-100 selection:text-red-600">
       
-      {/* --- NEW FLUID BACKGROUND DESIGN --- */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        
-        {/* 1. Base Paper Texture - Noise Overlay */}
-        <div className="absolute inset-0 bg-noise bg-noise-texture z-[10] opacity-50"></div>
-
-        {/* 2. Technical Grid - Micro crosshairs */}
-        <div className="absolute inset-0 bg-grid-tech opacity-30 z-0"></div>
-
-        {/* 3. The "Scanner" - Tight, Prominent Red Glow following mouse */}
-        <div 
-          className="absolute inset-0 transition-opacity duration-75 will-change-transform z-10 mix-blend-multiply"
-          style={{
-            // Reduced radius from 600px to 200px, increased opacity from 0.15 to 0.5
-            background: `radial-gradient(200px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(220, 38, 38, 0.5), rgba(255, 255, 255, 0) 100%)`,
-          }}
-        />
-        
-        {/* 4. Fluid Moving Shapes */}
-        <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-r from-red-50 to-orange-50 blur-[100px] opacity-40 animate-flow"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-l from-slate-100 to-red-50 blur-[80px] opacity-60 animate-flow" style={{ animationDirection: 'reverse', animationDuration: '20s' }}></div>
-        <div className="absolute top-[30%] right-[20%] w-[40vw] h-[40vw] rounded-full bg-slate-50 blur-[60px] opacity-30 animate-flow" style={{ animationDuration: '25s' }}></div>
-        
-      </div>
-
       {/* Sidebar - Glass */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-white/70 backdrop-blur-xl border-r border-white/40 z-40 hidden md:flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.02)]">
+      <aside className="fixed left-0 top-0 h-screen w-64 bg-white/70 backdrop-blur-xl border-r border-slate-200/60 z-40 hidden md:flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.02)]">
         <div className="p-8">
           <div 
             className="flex items-center space-x-3 mb-10 cursor-pointer group" 
@@ -148,16 +113,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 relative z-10">
+      <main className="flex-1 md:ml-64 relative z-10 h-full overflow-y-auto">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-5 bg-white/40 backdrop-blur-xl border-b border-white/30 transition-all duration-300 supports-[backdrop-filter]:bg-white/20">
-          <div className="md:hidden flex items-center space-x-2">
+        <header 
+          className={`
+            flex items-center justify-between px-8 py-5 transition-all duration-300
+            ${isHome 
+              ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-none pointer-events-none' 
+              : 'sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60'
+            }
+          `}
+        >
+          {/* Enable pointer events only for interactive children in absolute header */}
+          <div className={`md:hidden flex items-center space-x-2 ${isHome ? 'pointer-events-auto' : ''}`}>
             <Menu className="w-6 h-6 text-slate-700" />
             <span className="font-bold text-slate-900">TreasureHunt</span>
           </div>
 
-          <div className="flex-1 max-w-2xl mx-auto hidden md:block">
-            {currentView !== 'home' && (
+          <div className={`flex-1 max-w-2xl mx-auto hidden md:block ${isHome ? 'pointer-events-auto' : ''}`}>
+            {!isHome && (
                <div className="relative group animate-fade-in-up">
                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                    <Search className="h-4 w-4 text-slate-400 group-focus-within:text-[#DC2626] transition-colors" />
@@ -176,15 +150,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
 
-          <div className="flex items-center space-x-6">
-            <button className="relative p-2 text-slate-400 hover:text-[#DC2626] transition-colors group">
+          <div className={`flex items-center space-x-6 ${isHome ? 'pointer-events-auto' : ''}`}>
+            <button className={`relative p-2 transition-colors group ${isHome ? 'text-slate-600 hover:text-[#DC2626]' : 'text-slate-400 hover:text-[#DC2626]'}`}>
               <Bell className="w-6 h-6 group-hover:animate-bell-shake" />
               <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#DC2626] rounded-full border-2 border-white animate-pulse"></span>
             </button>
           </div>
         </header>
 
-        <div className="p-8 pb-20 relative">
+        <div className={`${isHome ? 'p-0' : 'p-8'} pb-20 relative min-h-full`}>
           {children}
         </div>
       </main>

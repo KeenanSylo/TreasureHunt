@@ -3,31 +3,32 @@ import { Search, ArrowRight, Sparkles, Zap, TrendingUp } from 'lucide-react';
 import { NavContext } from '../App';
 import { MOCK_ITEMS } from '../mockData';
 import { Badge, Button, ProfitPill, ConfidenceBar } from '../components/UIComponents';
+import Waves from '../components/Waves';
 
 const HiddenGemsReveal = () => {
-  const [mousePos, setMousePos] = useState({ x: -200, y: -200 }); // Start off-screen
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 }); // Start far off-screen
   const containerRef = useRef<HTMLSpanElement>(null);
   
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
-  };
+  // Global proximity detection
+  useEffect(() => {
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      setMousePos({ x, y });
+    };
 
-  const handleMouseLeave = () => {
-     // Optional: animate it away or just leave it
-     // setMousePos({ x: -200, y: -200 });
-  };
+    window.addEventListener('mousemove', handleWindowMouseMove);
+    return () => window.removeEventListener('mousemove', handleWindowMouseMove);
+  }, []);
 
   return (
      <span 
        ref={containerRef}
        className="relative inline-block cursor-crosshair align-bottom px-2 select-none"
-       onMouseMove={handleMouseMove}
-       onMouseLeave={handleMouseLeave}
      >
         {/* Base Layer - Standard Red/Orange Gradient */}
         <span 
@@ -40,15 +41,14 @@ const HiddenGemsReveal = () => {
           Hidden Gems
         </span>
 
-        {/* Reveal Layer - Same Font, but with Gold/Diamond "Design" */}
+        {/* Reveal Layer */}
         <span 
-           className="absolute inset-0 z-20 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 block pointer-events-none"
+           className="absolute inset-0 z-20 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 block pointer-events-none"
            style={{
-              // Use inherited font (Inter) instead of Playfair
               fontFamily: 'inherit',
-              fontWeight: 800, // Matching the base font weight
-              textShadow: '0px 2px 4px rgba(180, 83, 9, 0.4)', // Slightly stronger shadow for depth
-              transform: 'scale(1.0)', // Keep scale consistent
+              fontWeight: 800,
+              textShadow: '0px 2px 4px rgba(180, 83, 9, 0.4)',
+              transform: 'scale(1.0)',
               WebkitMaskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, black 30%, transparent 70%)`,
               maskImage: `radial-gradient(circle 180px at ${mousePos.x}px ${mousePos.y}px, black 30%, transparent 70%)`
            }}
@@ -103,68 +103,92 @@ export const Home = () => {
   };
 
   return (
-    <div className="space-y-16 max-w-7xl mx-auto">
-      {/* Hero Section */}
-      <section className="relative py-16 text-center animate-fade-in-up z-10">
+    <div className="relative min-h-screen">
+      
+      {/* Hero Section Content */}
+      <section className="relative pt-32 pb-16 text-center z-20 px-4 min-h-[75vh] flex flex-col justify-center overflow-hidden">
         
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm text-red-600 text-sm font-bold mb-8 animate-float">
-            <Sparkles className="w-4 h-4" />
-            <span>AI-Powered Arbitrage Engine V2.0</span>
+        {/* Waves Background - Localized to Hero, placed absolutely behind content */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+          <Waves
+            lineColor="rgba(220, 38, 38, 0.08)"
+            backgroundColor="transparent"
+            waveSpeedX={0.02}
+            waveSpeedY={0.01}
+            waveAmpX={40}
+            waveAmpY={20}
+            friction={0.9}
+            tension={0.01}
+            maxCursorMove={120}
+            xGap={12}
+            yGap={36}
+          />
+          {/* Gradient Fade Out at Bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
         </div>
-        
-        <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-tight">
-          Find{' '} 
-          <HiddenGemsReveal />
-          <br />
-          Before They Vanish.
-        </h1>
-        
-        <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium">
-          The world's first visual search engine for arbitrage. <br/>
-          Search for vague titles, discover real value.
-        </p>
 
-        {/* Enhanced Search Bar */}
-        <div className="max-w-3xl mx-auto relative group z-20">
-          <form onSubmit={handleSearch} className="relative">
-            <div className="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
-              <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#DC2626] transition-colors duration-300" />
-            </div>
-            <input
-              type="text"
-              value={localQuery}
-              onChange={(e) => setLocalQuery(e.target.value)}
-              className="block w-full pl-16 pr-36 py-6 border-0 rounded-full bg-white/80 backdrop-blur-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 transition-all duration-300 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] focus:shadow-[0_20px_50px_-12px_rgba(220,38,38,0.2)] text-xl font-medium"
-              placeholder={`Try searching: ${placeholderText}`}
-            />
-            <div className="absolute inset-y-2 right-2">
-              <Button size="lg" type="submit" className="rounded-full h-full px-8 shadow-red-500/30 text-lg">
-                Search
-              </Button>
-            </div>
-          </form>
+        <div className="relative z-20">
+            
+            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-tight">
+              Find{' '} 
+              <HiddenGemsReveal />
+              <br />
+              Before They Vanish.
+            </h1>
+            
+            <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
+              The world's first visual search engine for arbitrage. <br/>
+              Search for vague titles, discover real value.
+            </p>
 
-          {/* Quick Tags */}
-          <div className="mt-6 flex flex-wrap justify-center gap-3 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <span className="text-sm font-bold text-slate-400 mr-2 py-2">Trending:</span>
-            {['Cameras', 'Furniture', 'Watches', 'Sneakers', 'Vinyl'].map((tag) => (
-              <button
-                key={tag}
-                onClick={() => {
-                  setSearchQuery(tag);
-                  navigateTo('search');
-                }}
-                className="px-4 py-1.5 rounded-full bg-white/50 border border-white hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer backdrop-blur-sm"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+            {/* Search Bar */}
+            <div className="max-w-3xl mx-auto relative group z-20 mb-12">
+              <form onSubmit={handleSearch} className="relative">
+                <div className="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
+                  <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#DC2626] transition-colors duration-300" />
+                </div>
+                <input
+                  type="text"
+                  value={localQuery}
+                  onChange={(e) => setLocalQuery(e.target.value)}
+                  className="block w-full pl-16 pr-36 py-6 border border-slate-200 rounded-full bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-xl font-medium"
+                  placeholder={`Try searching: ${placeholderText}`}
+                />
+                <div className="absolute inset-y-2 right-2">
+                  <Button size="lg" type="submit" className="rounded-full h-full px-8 shadow-red-500/30 text-lg">
+                    Search
+                  </Button>
+                </div>
+              </form>
+
+              {/* Quick Tags */}
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <span className="text-sm font-bold text-slate-400 mr-2 py-2">Trending:</span>
+                {['Cameras', 'Furniture', 'Watches', 'Sneakers', 'Vinyl'].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      setSearchQuery(tag);
+                      navigateTo('search');
+                    }}
+                    className="px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Pill - Moved to Bottom */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-red-100 shadow-sm text-red-600 text-sm font-bold animate-float-slow mx-auto">
+                <Sparkles className="w-4 h-4" />
+                <span>AI-Powered Arbitrage Engine V2.0</span>
+            </div>
         </div>
       </section>
 
-      {/* Ticker Section - Continuous Scroll */}
-      <section className="w-full overflow-hidden border-y border-white/40 bg-white/30 backdrop-blur-sm py-4 relative group">
+      {/* Ticker Section */}
+      <section className="w-full overflow-hidden border-t border-slate-100 bg-slate-50/50 py-4 relative group z-10">
          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
          
@@ -172,7 +196,7 @@ export const Home = () => {
             {[...MOCK_ITEMS, ...MOCK_ITEMS, ...MOCK_ITEMS].map((item, idx) => (
               <div 
                 key={`${item.id}-${idx}`} 
-                className="flex items-center space-x-3 bg-white/80 px-4 py-2.5 rounded-xl border border-white shadow-sm min-w-[320px] cursor-pointer hover:border-red-300 transition-all hover:shadow-lg hover:-translate-y-1"
+                className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm min-w-[320px] cursor-pointer hover:border-red-300 transition-all hover:shadow-md hover:-translate-y-1"
                 onClick={() => navigateTo('detail', item)}
               >
                   <img src={item.imageUrl} className="w-12 h-12 rounded-lg object-cover" />
@@ -194,8 +218,8 @@ export const Home = () => {
          </div>
       </section>
 
-      {/* Featured Opportunities (Bento Grid) */}
-      <section className="pb-20">
+      {/* Featured Opportunities */}
+      <section className="py-20 px-8 bg-white relative z-20 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 bg-red-100 rounded-xl">
@@ -215,7 +239,7 @@ export const Home = () => {
           {/* Main Large Item */}
           <div 
             onClick={() => navigateTo('detail', MOCK_ITEMS[0])}
-            className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-500 border border-white"
+            className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-500 border border-slate-100"
           >
             <div className="absolute inset-0 bg-slate-900 group-hover:bg-red-950 transition-colors duration-500"></div>
             <img 
@@ -250,7 +274,7 @@ export const Home = () => {
           {/* Secondary Tall Item */}
           <div 
             onClick={() => navigateTo('detail', MOCK_ITEMS[1])}
-            className="md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-white bg-white"
+            className="md:col-span-1 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 bg-white"
           >
              <div className="h-1/2 overflow-hidden relative">
                 <img src={MOCK_ITEMS[1].imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -280,7 +304,7 @@ export const Home = () => {
             <div 
               key={item.id}
               onClick={() => navigateTo('detail', item)}
-              className="md:col-span-1 md:row-span-1 glass-card p-5 rounded-3xl relative group cursor-pointer flex flex-col justify-between"
+              className="md:col-span-1 md:row-span-1 bg-white p-5 rounded-3xl relative group cursor-pointer flex flex-col justify-between shadow-sm border border-slate-200 hover:shadow-lg transition-all"
             >
                <div className="flex items-start justify-between mb-2">
                   <div className="w-12 h-12 rounded-xl overflow-hidden">
