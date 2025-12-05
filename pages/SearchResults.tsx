@@ -30,9 +30,11 @@ export const SearchResults = () => {
   }, [searchQuery]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-140px)]">
+    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Filters Sidebar */}
-      <div className="w-full lg:w-72 flex-shrink-0 space-y-6 hidden lg:block overflow-y-auto pr-4 custom-scrollbar">
+      <div className="w-full lg:w-64 flex-shrink-0 space-y-5 hidden lg:block">
         <div>
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
             <SlidersHorizontal className="w-4 h-4 mr-2" /> Filters
@@ -78,16 +80,16 @@ export const SearchResults = () => {
       </div>
 
       {/* Results Feed */}
-      <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-2">
-        <div className="flex items-center justify-between mb-8 sticky top-0 bg-white/60 backdrop-blur-xl py-4 z-20 border-b border-white/20">
-          <h2 className="text-xl font-bold text-slate-900">
+      <div className="flex-1">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
             {searchQuery ? (
                 <span>
-                    Found <span className="text-[#DC2626]">{filteredItems.length}</span> Hidden Gems
+                    Found <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">{filteredItems.length}</span> Results
                 </span>
-            ) : 'Trending Opportunities'}
+            ) : '🔍 All Opportunities'}
           </h2>
-          <div className="flex space-x-2 bg-white/40 p-1 rounded-lg border border-white/50 backdrop-blur-md">
+          <div className="flex space-x-2 bg-white/70 backdrop-blur-sm p-1 rounded-xl border border-slate-200 shadow-sm">
             {['All', 'High Profit', 'Newest'].map(filter => (
               <button 
                 key={filter}
@@ -110,29 +112,35 @@ export const SearchResults = () => {
             return (
               <div 
                 key={item.id} 
-                className="group relative flex flex-col sm:flex-row bg-white/60 backdrop-blur-md border border-white/60 rounded-3xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.1)] hover:border-red-200 transition-all duration-300 hover:bg-white/80"
-                style={{ animationDelay: `${idx * 100}ms` }}
+                className="group relative flex flex-col sm:flex-row glass-card rounded-3xl overflow-hidden hover:shadow-[0_10px_40px_-10px_rgba(220,38,38,0.15)] hover:border-red-200 transition-all duration-300 scroll-reveal spotlight"
+                style={{ animationDelay: `${idx * 50}ms` }}
               >
+                {/* Hover Glow Effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-r from-red-500/5 to-orange-500/5"></div>
+                
                 {/* Image Section */}
                 <div className="sm:w-64 h-56 sm:h-auto relative flex-shrink-0 cursor-pointer overflow-hidden" onClick={() => navigateTo('detail', item)}>
-                  <img src={item.imageUrl} alt={item.realTitle} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <img src={item.imageUrl} alt={item.realTitle} className="w-full h-full object-cover image-zoom" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="absolute top-3 left-3">
-                     <Badge variant="secondary" className="backdrop-blur-md bg-white/90 shadow-sm font-bold">{item.marketplace}</Badge>
+                     <Badge variant="secondary" className="backdrop-blur-md bg-white/90 shadow-md font-bold border border-white">{item.marketplace}</Badge>
                   </div>
+                  {/* Corner Accent */}
+                  <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
 
                 {/* Content Section */}
-                <div className="flex-1 p-6 flex flex-col justify-between cursor-pointer" onClick={() => navigateTo('detail', item)}>
+                <div className="flex-1 p-6 flex flex-col justify-between cursor-pointer relative z-10" onClick={() => navigateTo('detail', item)}>
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="text-slate-400 text-sm font-medium line-through decoration-red-300">{item.listingTitle}</h4>
-                        <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 mt-1">
+                      <div className="flex-1 pr-4">
+                        <h4 className="text-slate-400 text-sm font-medium line-through decoration-red-300 mb-1">{item.listingTitle}</h4>
+                        <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 mt-1 group-hover:text-red-600 transition-colors">
                           {item.realTitle}
-                          <span className="text-[#DC2626] text-[10px] px-1.5 py-0.5 border border-red-100 rounded-md bg-red-50 uppercase tracking-wide">Verified</span>
+                          <span className="text-[#DC2626] text-[10px] px-2 py-0.5 border border-red-200 rounded-md bg-gradient-to-r from-red-50 to-orange-50 uppercase tracking-wide font-black shadow-sm">Verified</span>
                         </h3>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <span className="block text-2xl font-black text-slate-900">${item.listingPrice}</span>
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">List Price</span>
                       </div>
@@ -178,6 +186,8 @@ export const SearchResults = () => {
           })}
         </div>
       </div>
+    </div>
+    </div>
     </div>
   );
 };

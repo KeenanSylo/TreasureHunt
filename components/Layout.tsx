@@ -1,13 +1,12 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { 
-  LayoutGrid, 
   Search, 
   Heart, 
-  TrendingUp, 
-  Settings, 
   Bell,
   Menu,
-  Zap
+  Zap,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { NavContext } from '../App';
 
@@ -15,152 +14,145 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const SidebarItem = ({ 
-  icon: Icon, 
-  label, 
-  active, 
-  onClick 
-}: { 
-  icon: React.ElementType, 
-  label: string, 
-  active: boolean, 
-  onClick: () => void 
-}) => {
-  return (
-    <button 
-      onClick={onClick}
-      className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${
-        active 
-          ? 'bg-[#DC2626] text-white shadow-lg shadow-red-500/30 translate-x-1' 
-          : 'text-slate-500 hover:bg-red-50 hover:text-[#DC2626]'
-      }`}
-    >
-      <Icon className={`w-5 h-5 relative z-10 transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
-      <span className="font-semibold text-sm relative z-10">{label}</span>
-      
-      {/* Subtle hover splash effect for inactive items */}
-      {!active && (
-        <div className="absolute inset-0 bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      )}
-    </button>
-  );
-};
-
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { currentView, navigateTo } = useContext(NavContext);
   
   const isHome = currentView === 'home';
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navItems = [
+    { id: 'home', label: 'Discover', icon: Sparkles },
+    { id: 'search', label: 'Search', icon: Search },
+    { id: 'saved', label: 'Saved', icon: Heart, count: 2 },
+  ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white font-sans relative selection:bg-red-100 selection:text-red-600">
-      
-      {/* Sidebar - Glass */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-white/70 backdrop-blur-xl border-r border-slate-200/60 z-40 hidden md:flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.02)]">
-        <div className="p-8">
-          <div 
-            className="flex items-center space-x-3 mb-10 cursor-pointer group" 
-            onClick={() => navigateTo('home')}
-          >
-            <div className="w-10 h-10 rounded-xl bg-[#DC2626] flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:rotate-12 transition-transform duration-300">
-              <Zap className="w-6 h-6 text-white" fill="white" />
-            </div>
-            <span className="text-2xl font-extrabold tracking-tight text-slate-900 group-hover:text-[#DC2626] transition-colors">
-              Treasure<span className="text-[#DC2626]">Hunt</span>
-            </span>
-          </div>
-
-          <nav className="space-y-2">
-            <SidebarItem 
-              icon={LayoutGrid} 
-              label="Overview" 
-              active={currentView === 'home'} 
-              onClick={() => navigateTo('home')} 
-            />
-            <SidebarItem 
-              icon={TrendingUp} 
-              label="Trending Gems" 
-              active={currentView === 'search'} 
-              onClick={() => navigateTo('search')} 
-            />
-            <SidebarItem 
-              icon={Heart} 
-              label="Saved Items" 
-              active={currentView === 'saved'} 
-              onClick={() => navigateTo('saved')} 
-            />
-          </nav>
-        </div>
-
-        <div className="mt-auto p-8 space-y-4">
-          <SidebarItem 
-            icon={Settings} 
-            label="Settings" 
-            active={false} 
-            onClick={() => {}} 
-          />
-          <div className="pt-6 border-t border-slate-200/50">
-            <div className="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-50/50 transition-colors cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
-                <img src="https://picsum.photos/id/64/100/100" alt="User" />
+    <div className="min-h-screen font-sans relative selection:bg-red-100 selection:text-red-600">
+      <>
+        {/* Top Navigation - Floating Pill */}
+        <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 w-full max-w-5xl px-4">
+        <div className={`transition-all duration-500 rounded-full ${
+          scrolled || !isHome
+            ? 'bg-white/95 backdrop-blur-2xl shadow-2xl border border-slate-200/60'
+            : 'bg-white/80 backdrop-blur-xl shadow-xl border border-white/40'
+        }`}>
+          <div className="flex items-center justify-between h-14 px-4 sm:px-6">
+            
+            {/* Logo */}
+            <div 
+              className="flex items-center space-x-2 cursor-pointer group" 
+              onClick={() => navigateTo('home')}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg blur-md opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-red-600 via-red-500 to-orange-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="white" />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900 truncate">Alex Reseller</p>
-                <p className="text-xs text-red-600 font-medium">Pro Member</p>
-              </div>
+              <span className="text-lg sm:text-xl font-black tracking-tight">
+                <span className="text-slate-900">Treasure</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">Hunt</span>
+              </span>
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigateTo(item.id as any)}
+                  className={`relative flex items-center space-x-1.5 px-3 py-1.5 rounded-full font-semibold text-sm transition-all duration-300 ${
+                    currentView === item.id
+                      ? 'text-white'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                  }`}
+                >
+                  {currentView === item.id && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 rounded-full shadow-md shadow-red-500/30"></div>
+                  )}
+                  <item.icon className={`w-4 h-4 relative z-10 ${currentView === item.id ? '' : 'opacity-70'}`} />
+                  <span className="relative z-10">{item.label}</span>
+                  {item.count && (
+                    <span className="relative z-10 px-1.5 py-0.5 text-[10px] font-bold bg-white/20 rounded-full">
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Side */}
+            <div className="flex items-center space-x-2">
+              {/* Notification Bell */}
+              <button className="relative p-1.5 text-slate-600 hover:text-red-600 transition-colors group hidden sm:block">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+              </button>
+
+              {/* User Avatar */}
+              <button className="hidden sm:flex items-center space-x-2 px-2 py-1 rounded-full hover:bg-slate-100/60 transition-colors cursor-pointer">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                  A
+                </div>
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-slate-600 hover:text-red-600 transition-colors"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
         </div>
-      </aside>
+        </nav>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-full max-w-5xl px-4">
+            <div className="md:hidden rounded-3xl border border-slate-200/60 bg-white/95 backdrop-blur-2xl shadow-xl">
+              <div className="px-4 py-4 space-y-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      navigateTo(item.id as any);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                      currentView === item.id
+                        ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-lg'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                    {item.count && (
+                      <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-white/20 rounded-full">
+                        {item.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 relative z-10 h-full overflow-y-auto">
-        {/* Top Bar */}
-        <header 
-          className={`
-            flex items-center justify-between px-8 py-5 transition-all duration-300
-            ${isHome 
-              ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-none pointer-events-none' 
-              : 'sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60'
-            }
-          `}
-        >
-          {/* Enable pointer events only for interactive children in absolute header */}
-          <div className={`md:hidden flex items-center space-x-2 ${isHome ? 'pointer-events-auto' : ''}`}>
-            <Menu className="w-6 h-6 text-slate-700" />
-            <span className="font-bold text-slate-900">TreasureHunt</span>
-          </div>
-
-          <div className={`flex-1 max-w-2xl mx-auto hidden md:block ${isHome ? 'pointer-events-auto' : ''}`}>
-            {!isHome && (
-               <div className="relative group animate-fade-in-up">
-                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                   <Search className="h-4 w-4 text-slate-400 group-focus-within:text-[#DC2626] transition-colors" />
-                 </div>
-                 <input
-                   type="text"
-                   placeholder="Search..."
-                   className="block w-full pl-11 pr-4 py-3 border border-slate-200/60 rounded-full leading-5 bg-white/50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#DC2626] focus:border-transparent focus:shadow-[0_0_20px_rgba(220,38,38,0.15)] sm:text-sm transition-all duration-300"
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter') {
-                       navigateTo('search', { query: (e.target as HTMLInputElement).value });
-                     }
-                   }}
-                 />
-               </div>
-            )}
-          </div>
-
-          <div className={`flex items-center space-x-6 ${isHome ? 'pointer-events-auto' : ''}`}>
-            <button className={`relative p-2 transition-colors group ${isHome ? 'text-slate-600 hover:text-[#DC2626]' : 'text-slate-400 hover:text-[#DC2626]'}`}>
-              <Bell className="w-6 h-6 group-hover:animate-bell-shake" />
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#DC2626] rounded-full border-2 border-white animate-pulse"></span>
-            </button>
-          </div>
-        </header>
-
-        <div className={`${isHome ? 'p-0' : 'p-8'} pb-20 relative min-h-full`}>
-          {children}
-        </div>
+      <main className="relative pt-20">
+        {children}
       </main>
     </div>
   );

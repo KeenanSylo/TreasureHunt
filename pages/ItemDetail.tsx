@@ -15,52 +15,58 @@ export const ItemDetail = () => {
   const roi = Math.round((profit / selectedItem.listingPrice) * 100);
 
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in-up pb-10">
+    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
       <button 
         onClick={() => navigateTo('search')} 
-        className="flex items-center text-slate-500 hover:text-[#DC2626] mb-8 transition-colors font-medium text-sm group backdrop-blur-sm px-3 py-1.5 rounded-full bg-white/30 w-fit"
+        className="flex items-center text-slate-600 hover:text-red-600 mb-6 sm:mb-8 transition-all font-semibold text-sm group px-4 py-2.5 rounded-xl bg-white border-2 border-slate-200 hover:border-red-300 w-fit shadow-sm hover:shadow-md slide-in-left"
       >
         <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-        Back to Results
+        Back
       </button>
 
       {/* Header Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 text-reveal">
            <div className="flex items-center space-x-3 mb-4">
-              <Badge variant="danger" className="animate-pulse-slow bg-red-600 text-white border-none shadow-lg shadow-red-500/30">
+              <Badge variant="danger" className="badge-pulse bg-gradient-to-r from-red-600 to-orange-600 text-white border-none shadow-lg shadow-red-500/30">
                  {selectedItem.confidenceScore}% MATCH
               </Badge>
-              <Badge variant="outline" className="bg-white/60 backdrop-blur">{selectedItem.category}</Badge>
+              <Badge variant="outline" className="bg-white/60 backdrop-blur border-slate-200">{selectedItem.category}</Badge>
            </div>
-           <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-2 leading-tight drop-shadow-sm">
+           <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-3 leading-tight drop-shadow-sm">
              {selectedItem.realTitle}
            </h1>
-           <p className="text-slate-500 font-medium">Verified by AI analysis of {selectedItem.marketplace} listing.</p>
+           <p className="text-slate-500 font-medium flex items-center gap-2">
+             <Sparkles className="w-4 h-4 text-red-500" />
+             Verified by AI analysis of {selectedItem.marketplace} listing.
+           </p>
         </div>
         
-        <div className="flex flex-col items-start lg:items-end justify-center glass-panel p-6 rounded-2xl">
-            <div className="text-right">
+        <div className="flex flex-col items-start lg:items-end justify-center glass-panel p-8 rounded-2xl shadow-lg slide-in-right relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-red-500/10 to-transparent rounded-bl-full"></div>
+            <div className="text-right relative z-10">
                 <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Estimated Profit</span>
-                <p className="text-5xl font-black text-[#DC2626] tracking-tight my-1">+${profit.toLocaleString()}</p>
+                <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#DC2626] to-[#EF4444] tracking-tight my-2 animate-float-slow">+${profit.toLocaleString()}</p>
                 <div className="flex items-center justify-end gap-2">
-                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-bold">{roi}% ROI</span>
+                    <span className="bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 px-3 py-1 rounded-lg text-sm font-bold border border-green-200 shadow-sm">{roi}% ROI</span>
                 </div>
             </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 stagger-fade-in">
         {/* LEFT COLUMN: The Listing */}
-        <div className="glass-panel bg-white/60 rounded-3xl overflow-hidden relative group">
-          <div className="absolute top-0 left-0 w-full bg-slate-50/80 backdrop-blur-md border-b border-slate-100 p-3 text-center text-slate-500 text-xs font-extrabold uppercase tracking-widest z-10">
-            Original Listing
+        <div className="glass-card rounded-3xl overflow-hidden relative group shadow-lg">
+          <div className="absolute top-0 left-0 w-full bg-gradient-to-r from-slate-50/90 to-slate-100/90 backdrop-blur-md border-b border-slate-200 p-3 text-center text-slate-500 text-xs font-extrabold uppercase tracking-widest z-10">
+            <span className="inline-block">Original Listing</span>
           </div>
           
           <div className="p-8 pt-16">
-            <div className="aspect-square rounded-2xl overflow-hidden mb-8 bg-slate-100/50 relative shadow-inner">
-               <img src={selectedItem.imageUrl} className="w-full h-full object-cover mix-blend-multiply opacity-90 transition-transform duration-700 group-hover:scale-105" alt="Listing" />
-               <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-slate-900 text-sm font-bold shadow-sm">
+            <div className="aspect-square rounded-2xl overflow-hidden mb-8 bg-slate-100/50 relative shadow-lg border border-slate-200/50 spotlight">
+               <img src={selectedItem.imageUrl} className="w-full h-full object-cover mix-blend-multiply opacity-90 image-zoom" alt="Listing" />
+               <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+               <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-slate-900 text-sm font-bold shadow-md border border-white">
                  Via {selectedItem.marketplace}
                </div>
             </div>
@@ -167,6 +173,7 @@ export const ItemDetail = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

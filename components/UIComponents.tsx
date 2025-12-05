@@ -35,13 +35,13 @@ export const Button = ({
   disabled?: boolean,
   type?: 'button' | 'submit' | 'reset'
 }) => {
-  const base = "inline-flex items-center justify-center font-bold transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white relative overflow-hidden";
+  const base = "inline-flex items-center justify-center font-bold transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white relative overflow-hidden active:scale-95";
   
   const variants = {
-    primary: "bg-[#DC2626] hover:bg-[#B91C1C] text-white focus:ring-red-500 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:-translate-y-0.5 btn-shine",
-    secondary: "bg-slate-900 hover:bg-slate-800 text-white focus:ring-slate-500 shadow-md",
-    ghost: "bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900",
-    outline: "bg-transparent border border-slate-200 text-slate-600 hover:border-red-500 hover:text-red-600"
+    primary: "bg-gradient-to-r from-[#DC2626] to-[#EF4444] hover:from-[#B91C1C] hover:to-[#DC2626] text-white focus:ring-red-500 shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:-translate-y-0.5 btn-shine ripple-effect",
+    secondary: "bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white focus:ring-slate-500 shadow-md ripple-effect",
+    ghost: "bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 hover:scale-105",
+    outline: "bg-transparent border-2 border-slate-200 text-slate-600 hover:border-red-500 hover:text-red-600 hover:bg-red-50"
   };
 
   const sizes = {
@@ -57,7 +57,7 @@ export const Button = ({
       className={`${base} ${variants[variant]} ${sizes[size]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       disabled={disabled}
     >
-      {Icon && <Icon className={`w-4 h-4 ${children ? 'mr-2' : ''}`} />}
+      {Icon && <Icon className={`w-4 h-4 ${children ? 'mr-2' : ''} transition-transform group-hover:scale-110`} />}
       {children}
     </button>
   );
@@ -74,19 +74,21 @@ export const ProfitPill = ({ price, value }: { price: number, value: number }) =
 };
 
 export const ConfidenceBar = ({ score }: { score: number }) => {
-  let color = 'bg-red-600'; 
+  let color = 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600'; 
 
   return (
     <div className="w-full">
       <div className="flex justify-between text-xs mb-1.5 font-semibold">
          <span className="text-slate-400 uppercase tracking-wider text-[10px]">AI Confidence</span>
-         <span className="text-red-600">{score}%</span>
+         <span className="text-red-600 font-black">{score}%</span>
       </div>
-      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200 relative">
          <div 
-            className={`h-full ${color} shadow-[0_0_10px_rgba(220,38,38,0.5)] transition-all duration-1000 ease-out`} 
+            className={`h-full ${color} shadow-[0_0_15px_rgba(220,38,38,0.6)] transition-all duration-1000 ease-out relative overflow-hidden`} 
             style={{ width: `${score}%` }}
-         ></div>
+         >
+           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+         </div>
       </div>
     </div>
   );

@@ -103,111 +103,124 @@ export const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-gradient-to-br from-orange-50 via-rose-50 to-red-50">
+      
+      {/* Animated Gradient Background - covers from top, ends before ticker */}
+      <div className="absolute inset-0 pointer-events-none" style={{ height: '1100px' }}>
+        <div className="absolute inset-0 opacity-60">
+          <div className="absolute -top-20 left-0 w-[500px] h-[500px] bg-gradient-to-br from-red-200/40 to-orange-200/30 rounded-full blur-3xl animate-float-slow"></div>
+          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-br from-orange-200/30 to-pink-200/40 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-0 left-1/3 w-[550px] h-[550px] bg-gradient-to-br from-rose-200/40 to-red-200/30 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '4s' }}></div>
+        </div>
+        {/* Smooth fade to white at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-b from-transparent to-white"></div>
+      </div>
       
       {/* Hero Section Content */}
-      <section className="relative pt-32 pb-16 text-center z-20 px-4 min-h-[75vh] flex flex-col justify-center overflow-hidden">
-        
-        {/* Waves Background - Localized to Hero, placed absolutely behind content */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
-          <Waves
-            lineColor="rgba(220, 38, 38, 0.08)"
-            backgroundColor="transparent"
-            waveSpeedX={0.02}
-            waveSpeedY={0.01}
-            waveAmpX={40}
-            waveAmpY={20}
-            friction={0.9}
-            tension={0.01}
-            maxCursorMove={120}
-            xGap={12}
-            yGap={36}
-          />
-          {/* Gradient Fade Out at Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
-        </div>
+      <section className="relative pt-24 sm:pt-32 pb-16 px-4 min-h-[85vh] flex flex-col justify-center">
 
-        <div className="relative z-20">
+        <div className="relative z-20 max-w-5xl mx-auto text-center">
+            {/* Animated Badge Above Title */}
+            <div className="mb-8 animate-bounce-in">
+              <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold shadow-xl shadow-red-500/30">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                </span>
+                <span>2,847 gems discovered in the last 24h</span>
+              </div>
+            </div>
             
-            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 leading-tight">
-              Find{' '} 
-              <HiddenGemsReveal />
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1] text-reveal">
+              <span className="text-slate-900">Uncover</span>{' '}
+              <span className="relative inline-block">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-red-600 animate-gradient">Hidden Gems</span>
+                <svg className="absolute -bottom-2 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
+                  <path d="M2 10C50 2 150 2 198 10" stroke="url(#paint0_linear)" strokeWidth="3" strokeLinecap="round"/>
+                  <defs>
+                    <linearGradient id="paint0_linear" x1="0" y1="0" x2="200" y2="0">
+                      <stop stopColor="#DC2626"/>
+                      <stop offset="0.5" stopColor="#F97316"/>
+                      <stop offset="1" stopColor="#DC2626"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
               <br />
-              Before They Vanish.
+              <span className="text-slate-900">Before Everyone Else</span>
             </h1>
             
-            <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-              The world's first visual search engine for arbitrage. <br/>
-              Search for vague titles, discover real value.
+            <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-12 font-medium leading-relaxed slide-in-left">
+              AI-powered visual search that finds undervalued treasures hiding in plain sight.{' '}
+              <span className="text-red-600 font-bold">Turn $100 into $500</span> by spotting what others miss.
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-3xl mx-auto relative group z-20 mb-12">
+            <div className="max-w-2xl mx-auto relative group z-20 mb-10 slide-in-right">
               <form onSubmit={handleSearch} className="relative">
-                <div className="absolute inset-y-0 left-0 pl-8 flex items-center pointer-events-none">
-                  <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#DC2626] transition-colors duration-300" />
-                </div>
-                <input
-                  type="text"
-                  value={localQuery}
-                  onChange={(e) => setLocalQuery(e.target.value)}
-                  className="block w-full pl-16 pr-36 py-6 border border-slate-200 rounded-full bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-xl font-medium"
-                  placeholder={`Try searching: ${placeholderText}`}
-                />
-                <div className="absolute inset-y-2 right-2">
-                  <Button size="lg" type="submit" className="rounded-full h-full px-8 shadow-red-500/30 text-lg">
-                    Search
-                  </Button>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-red-500/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center bg-white/90 backdrop-blur-xl rounded-full border border-slate-200 hover:border-red-300 focus-within:border-red-500 transition-all shadow-lg hover:shadow-xl focus-within:shadow-2xl">
+                  <Search className="ml-5 h-5 w-5 text-slate-400 group-focus-within:text-red-500 transition-colors flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={localQuery}
+                    onChange={(e) => setLocalQuery(e.target.value)}
+                    className="flex-1 px-4 py-3.5 bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none text-base font-medium"
+                    placeholder={placeholderText || "Search for vintage watches, cameras, furniture..."}
+                  />
+                  <button
+                    type="submit"
+                    className="mr-1.5 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-bold rounded-full transition-all hover:scale-105 flex items-center gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Hunt</span>
+                  </button>
                 </div>
               </form>
 
               {/* Quick Tags */}
-              <div className="mt-6 flex flex-wrap justify-center gap-3">
-                <span className="text-sm font-bold text-slate-400 mr-2 py-2">Trending:</span>
-                {['Cameras', 'Furniture', 'Watches', 'Sneakers', 'Vinyl'].map((tag) => (
+              <div className="flex flex-wrap justify-center gap-2.5 stagger-fade-in mt-8">
+                {['Cameras', 'Furniture', 'Watches', 'Sneakers', 'Vinyl', 'Art'].map((tag) => (
                   <button
                     key={tag}
                     onClick={() => {
                       setSearchQuery(tag);
                       navigateTo('search');
                     }}
-                    className="px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer"
+                    className="px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-slate-200 hover:border-red-400 hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 text-slate-700 hover:text-red-600 text-sm font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-1 cursor-pointer"
                   >
                     {tag}
                   </button>
                 ))}
               </div>
             </div>
-
-            {/* AI Pill - Moved to Bottom */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-red-100 shadow-sm text-red-600 text-sm font-bold animate-float-slow mx-auto">
-                <Sparkles className="w-4 h-4" />
-                <span>AI-Powered Arbitrage Engine V2.0</span>
-            </div>
         </div>
       </section>
 
       {/* Ticker Section */}
-      <section className="w-full overflow-hidden border-t border-slate-100 bg-slate-50/50 py-4 relative group z-10">
-         <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
-         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none"></div>
+      <section className="relative overflow-hidden py-8 mx-auto max-w-7xl">
+         <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+         <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
          
-         <div className="flex animate-ticker w-max gap-6 hover:[animation-play-state:paused]">
+         <div className="flex animate-ticker w-max gap-4 hover:[animation-play-state:paused]">
             {[...MOCK_ITEMS, ...MOCK_ITEMS, ...MOCK_ITEMS].map((item, idx) => (
               <div 
                 key={`${item.id}-${idx}`} 
-                className="flex items-center space-x-3 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm min-w-[320px] cursor-pointer hover:border-red-300 transition-all hover:shadow-md hover:-translate-y-1"
+                className="flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-md border border-slate-200 min-w-[320px] cursor-pointer hover:border-red-300 hover:shadow-xl hover:-translate-y-1 transition-all"
                 onClick={() => navigateTo('detail', item)}
               >
-                  <img src={item.imageUrl} className="w-12 h-12 rounded-lg object-cover" />
+                  <div className="relative flex-shrink-0">
+                    <img src={item.imageUrl} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></div>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-0.5">
-                       <span className="font-bold text-slate-900 text-sm truncate">{item.realTitle}</span>
-                       <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">FOUND</span>
+                    <div className="flex justify-between items-start mb-0.5">
+                       <span className="font-black text-slate-900 text-sm truncate">{item.realTitle}</span>
+                       <span className="flex-shrink-0 ml-2 text-[10px] bg-gradient-to-r from-red-600 to-orange-500 text-white px-2 py-0.5 rounded-md font-black shadow-sm">HOT</span>
                     </div>
-                    <div className="text-xs text-slate-500 flex items-center justify-between">
-                       <span className="line-through opacity-70">${item.listingPrice}</span>
-                       <div className="flex items-center text-green-600 font-bold">
+                    <div className="text-xs flex items-center justify-between">
+                       <span className="text-slate-400 line-through">${item.listingPrice}</span>
+                       <div className="flex items-center text-emerald-600 font-black">
                          <TrendingUp className="w-3 h-3 mr-1" />
                          +${item.realValue - item.listingPrice}
                        </div>
@@ -219,40 +232,45 @@ export const Home = () => {
       </section>
 
       {/* Featured Opportunities */}
-      <section className="py-20 px-8 bg-white relative z-20 max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-red-100 rounded-xl">
-              <Zap className="w-5 h-5 text-red-600" />
-            </div>
-            <h2 className="text-3xl font-bold text-slate-900">Featured Opportunities</h2>
+      <section className="py-16 sm:py-20 px-4 sm:px-8 relative z-20 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 gap-4 scroll-reveal">
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2">
+              🔥 Hottest Finds
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-medium">
+              AI-curated opportunities with highest profit potential
+            </p>
           </div>
           <button 
             onClick={() => navigateTo('search')} 
-            className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors flex items-center group bg-white px-4 py-2 rounded-full border border-red-100 hover:border-red-200 shadow-sm"
+            className="text-sm font-bold text-white bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 transition-all flex items-center group px-6 py-3 rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:-translate-y-0.5"
           >
-            View All <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            Explore All <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 h-auto md:h-[650px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 stagger-fade-in">
           {/* Main Large Item */}
           <div 
             onClick={() => navigateTo('detail', MOCK_ITEMS[0])}
-            className="md:col-span-2 md:row-span-2 relative group rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-red-900/10 transition-all duration-500 border border-slate-100"
+            className="md:col-span-2 md:row-span-2 relative group rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border-2 border-slate-200 hover:border-red-300"
           >
-            <div className="absolute inset-0 bg-slate-900 group-hover:bg-red-950 transition-colors duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-red-900"></div>
             <img 
               src={MOCK_ITEMS[0].imageUrl} 
               alt={MOCK_ITEMS[0].realTitle} 
-              className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+              className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent"></div>
             
-            <div className="absolute top-6 left-6 flex gap-2">
-               <Badge variant="primary" className="bg-red-600 text-white border-none shadow-lg animate-pulse-slow">
+            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 flex gap-2">
+               <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-black shadow-lg">
                  98% MATCH
-               </Badge>
+               </div>
+               <div className="px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-sm text-white text-xs font-bold">
+                 {MOCK_ITEMS[0].category}
+               </div>
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-8">
