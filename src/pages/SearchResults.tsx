@@ -1,37 +1,86 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Filter, ChevronDown, Heart, SlidersHorizontal } from 'lucide-react';
+import { Filter, ChevronDown, Heart, SlidersHorizontal, Loader2 } from 'lucide-react';
 import { NavContext } from '../app/context';
-import { MOCK_ITEMS } from '../mockData';
 import { Badge, Button, ConfidenceBar } from '../components/UIComponents';
 import { Item } from '../types';
+import { searchItems } from '@/lib/api';
 
-export const SearchResults = () => {
+interface SearchResultsProps {
+  authToken: string | null;
+}
+
+export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
   const { navigateTo, searchQuery, toggleSaveItem, savedItems } = useContext(NavContext);
-  const [filteredItems, setFilteredItems] = useState<Item[]>(MOCK_ITEMS);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredItems(MOCK_ITEMS);
-      return;
-    }
+    const fetchResults = async () => {
+      if (!searchQuery) {
+        setFilteredItems([]);
+        return;
+      }
 
-    const lowerQuery = searchQuery.toLowerCase();
-    
-    const results = MOCK_ITEMS.filter(item => {
-      return (
-        item.listingTitle.toLowerCase().includes(lowerQuery) ||
-        item.category.toLowerCase().includes(lowerQuery) ||
-        item.realTitle.toLowerCase().includes(lowerQuery)
-      );
-    });
-    
-    setFilteredItems(results);
-  }, [searchQuery]);
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await searchItems({ q: searchQuery, max_price: 1000 }, authToken || undefined);
+        
+        // Transform API response to Item format
+        const items: Item[] = response.results.map((result, index) => ({
+          id: result.external_id || `item-${index}`,
+          listingTitle: result.title_vague,
+          realTitle: result.title_real || result.title_vague,
+          listingPrice: result.price_listed || 0,
+          realValue: result.price_estimated || 0,
+          confidenceScore: result.confidence === 'high' ? 90 : result.confidence === 'medium' ? 70 : 50,
+          marketplace: 'eBay' as any,
+          imageUrl: result.image_url || '/placeholder.jpg',
+          category: 'General',
+          listingDate: 'Today',
+          condition: 'Used',
+          description: result.reasoning || 'AI-analyzed item',
+          matchReason: result.reasoning || 'Identified by AI'
+        }));
+
+        setFilteredItems(items);
+      } catch (err: any) {
+        console.error('Search error:', err);
+        setError(err.message || 'Failed to search items');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [searchQuery, authToken]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+      
+      {/* Loading State */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="w-12 h-12 text-red-500 animate-spin mb-4" />
+          <p className="text-lg font-bold text-slate-700">Hunting for treasures...</p>
+          <p className="text-sm text-slate-500 mt-2">AI is analyzing thousands of listings</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <p className="text-red-700 font-bold mb-2">Search Failed</p>
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Results */}
+      {!loading && !error && (
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Filters Sidebar */}
       <div className="w-full lg:w-64 flex-shrink-0 space-y-5 hidden lg:block">
@@ -187,6 +236,7 @@ export const SearchResults = () => {
         </div>
       </div>
     </div>
+      )}
     </div>
     </div>
   );

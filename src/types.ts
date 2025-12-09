@@ -14,14 +14,17 @@ export interface Item {
   matchReason: string; // Why the AI matched this
 }
 
-export type ViewState = 'home' | 'search' | 'detail' | 'saved';
+export type View = 'home' | 'search' | 'detail' | 'saved' | 'login';
 
 export interface NavContextType {
-  currentView: ViewState;
-  navigateTo: (view: ViewState, data?: any) => void;
+  currentView: View;
+  navigateTo: (view: View, data?: any) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedItem: Item | null;
   savedItems: string[]; // List of IDs
   toggleSaveItem: (id: string) => void;
+  isAuthenticated: boolean;
+  userEmail: string | null;
+  logout: () => void;
 }

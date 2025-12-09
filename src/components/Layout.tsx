@@ -15,11 +15,12 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { currentView, navigateTo } = useContext(NavContext);
+  const { currentView, navigateTo, userEmail, logout } = useContext(NavContext);
   
   const isHome = currentView === 'home';
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +29,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (userMenuOpen && !target.closest('.user-menu-container')) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [userMenuOpen]);
 
   const navItems = [
     { id: 'home', label: 'Discover', icon: Sparkles },
@@ -86,24 +99,48 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       {item.count}
                     </span>
                   )}
-                </button>
-              ))}
-            </div>
-
-            {/* Right Side */}
-            <div className="flex items-center space-x-2">
-              {/* Notification Bell */}
-              <button className="relative p-1.5 text-slate-600 hover:text-red-600 transition-colors group hidden sm:block">
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
-              </button>
-
               {/* User Avatar */}
-              <button className="hidden sm:flex items-center space-x-2 px-2 py-1 rounded-full hover:bg-slate-100/60 transition-colors cursor-pointer">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-md">
-                  A
-                </div>
-              </button>
+              <div className="hidden sm:block relative user-menu-container">
+                <button 
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 px-2 py-1 rounded-full hover:bg-slate-100/60 transition-colors cursor-pointer"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    {userEmail?.[0].toUpperCase() || 'U'}
+                  </div>
+                </button>
+
+                {/* User Dropdown */}
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-fade-in">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="text-xs text-slate-500">Signed in as</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">{userEmail}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div></div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile Menu Button */}
               <button 

@@ -1,10 +1,20 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { ArrowLeft, ExternalLink, Heart, Share2, AlertCircle, CheckCircle2, Sparkles, AlertTriangle, Zap } from 'lucide-react';
 import { NavContext } from '../app/context';
 import { Badge, Button, ProfitPill } from '../components/UIComponents';
+import { saveItem } from '@/lib/api';
+import type { Item } from '@/types';
 
-export const ItemDetail = () => {
-  const { selectedItem, navigateTo, toggleSaveItem, savedItems } = useContext(NavContext);
+interface ItemDetailProps {
+  item: Item;
+  authToken: string | null;
+}
+
+export const ItemDetail: React.FC<ItemDetailProps> = ({ item: selectedItem, authToken }) => {
+  const { navigateTo, toggleSaveItem, savedItems } = useContext(NavContext);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   if (!selectedItem) {
     return <div className="text-center py-20 text-slate-400">Item not found.</div>;
@@ -158,14 +168,61 @@ export const ItemDetail = () => {
                 </div>
              </div>
 
+             {/* Save Messages */}
+             {saveError && (
+               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                 {saveError}
+               </div>
+             )}
+             {saveSuccess && (
+               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+                 Successfully saved to your watchlist!
+               </div>
+             )}
+
              <div className="mt-10 pt-8 border-t border-slate-100/50 flex gap-4">
                 <Button 
-                   variant={isSaved ? 'secondary' : 'primary'} 
-                   className={`flex-1 text-lg py-4 shadow-xl ${isSaved ? '' : 'shadow-red-500/20'}`}
+                   variant={isSaved || saveSuccess ? 'secondary' : 'primary'} 
+                   className={`flex-1 text-lg py-4 shadow-xl ${isSaved || saveSuccess ? '' : 'shadow-red-500/20'}`}
                    icon={Heart}
-                   onClick={() => toggleSaveItem(selectedItem.id)}
+                   onClick={async () => {
+                     if (!authToken) {
+                       setSaveError('Please log in to save items');
+                       return;
+                     }
+                     
+                     if (isSaved || saveSuccess) {
+                       return;
+                     }
+
+                     setSaving(true);
+                     setSaveError(null);
+                     
+                     try {
+                       await saveItem({
+                         external_id: selectedItem.id,
+                         title_vague: selectedItem.listingTitle,
+                         title_real: selectedItem.realTitle,
+                         price_listed: selectedItem.listingPrice,
+                         price_estimated: selectedItem.realValue,
+                         image_url: selectedItem.imageUrl,
+                         market_url: '#',
+                         marketplace: 'ebay'
+                       }, authToken);
+                       
+                       setSaveSuccess(true);
+                       toggleSaveItem(selectedItem.id);
+                       
+                       setTimeout(() => setSaveSuccess(false), 3000);
+                     } catch (error: any) {
+                       setSaveError(error.message || 'Failed to save item');
+                     } finally {
+                       setSaving(false);
+                     }
+                   }}
+                   disabled={saving || isSaved || saveSuccess}
                 >
-                   {isSaved ? 'Saved to Watchlist' : 'Add to Watchlist'}
+                   {saving ? 'Saving...' : (isSaved || saveSuccess) ? 'Saved to Watchlist' : 'Add to Watchlist'}
                 </Button>
                 <Button variant="outline" icon={Share2} className="px-4 border-slate-200 bg-white/50 hover:bg-white">
                 </Button>
