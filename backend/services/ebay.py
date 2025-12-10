@@ -58,6 +58,72 @@ class EbayService:
             
             return self.token
     
+    async def get_market_price(self, item_title: str) -> Optional[float]:
+        """
+        Get average market price from eBay sold listings
+        
+        Args:
+            item_title: Title of the item to search for
+        
+        Returns:
+            Average sold price or None if no data
+        """
+        try:
+            token = await self.get_oauth_token()
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "X-EBAY-C-MARKETPLACE-ID": "EBAY_US"
+            }
+            
+            # Search sold/completed listings
+            params = {
+                "q": item_title,
+                "limit": "20",
+                "filter": "buyingOptions:{FIXED_PRICE},priceCurrency:USD",
+                "fieldgroups": "EXTENDED"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/buy/browse/v1/item_summary/search",
+                    headers=headers,
+                    params=params,
+                    timeout=10.0
+                )
+                
+                if response.status_code != 200:
+                    return None
+                
+                data = response.json()
+                items = data.get("itemSummaries", [])
+                
+                if not items:
+                    return None
+                
+                # Calculate average price from sold listings
+                prices = []
+                for item in items:
+                    if item.get("price"):
+                        try:
+                            price = float(item["price"].get("value", 0))
+                            if price > 0:
+                                prices.append(price)
+                        except (ValueError, TypeError):
+                            continue
+                
+                if prices:
+                    # Return median price (more robust than average)
+                    prices.sort()
+                    median_idx = len(prices) // 2
+                    return prices[median_idx]
+                
+                return None
+        
+        except Exception as e:
+            print(f"Market price lookup error: {e}")
+            return None
+    
     async def search_items(
         self,
         query: str,
