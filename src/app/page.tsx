@@ -15,6 +15,7 @@ export default function Page() {
   const [currentView, setCurrentView] = useState<View>('login')
   const [selectedItem, setSelectedItem] = useState<Item | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [marketplaceFilter, setMarketplaceFilter] = useState<Set<string> | null>(null)
   const [savedItems, setSavedItems] = useState<string[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -137,6 +138,8 @@ export default function Page() {
       navigateTo, 
       searchQuery, 
       setSearchQuery,
+      marketplaceFilter,
+      setMarketplaceFilter,
       selectedItem,
       savedItems,
       toggleSaveItem,

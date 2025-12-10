@@ -60,7 +60,7 @@ const HiddenGemsReveal = () => {
 };
 
 export const Home = () => {
-  const { navigateTo, setSearchQuery } = useContext(NavContext);
+  const { navigateTo, setSearchQuery, setMarketplaceFilter } = useContext(NavContext);
   const [localQuery, setLocalQuery] = useState('');
   const [placeholderText, setPlaceholderText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -98,6 +98,7 @@ export const Home = () => {
     e.preventDefault();
     if (localQuery.trim()) {
       setSearchQuery(localQuery);
+      setMarketplaceFilter(null); // Reset filter for "Hunt All"
       navigateTo('search');
     }
   };
@@ -173,10 +174,40 @@ export const Home = () => {
                     className="mr-1.5 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-bold rounded-full transition-all hover:scale-105 flex items-center gap-2 shadow-md hover:shadow-lg"
                   >
                     <Sparkles className="w-4 h-4" />
-                    <span className="hidden sm:inline">Hunt</span>
+                    <span className="hidden sm:inline">Hunt All</span>
                   </button>
                 </div>
               </form>
+              
+              {/* Marketplace Specific Hunt Buttons */}
+              <div className="flex gap-3 justify-center mt-4">
+                <button
+                  onClick={() => {
+                    if (localQuery.trim()) {
+                      setSearchQuery(localQuery);
+                      setMarketplaceFilter(new Set(['eBay']));
+                      navigateTo('search');
+                    }
+                  }}
+                  className="px-4 py-2 bg-white/80 backdrop-blur-sm border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-700 font-bold rounded-full transition-all hover:scale-105 flex items-center gap-2 shadow-sm hover:shadow-md text-sm"
+                >
+                  <span>🛒</span>
+                  <span>Hunt on eBay</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (localQuery.trim()) {
+                      setSearchQuery(localQuery);
+                      setMarketplaceFilter(new Set(['Vinted']));
+                      navigateTo('search');
+                    }
+                  }}
+                  className="px-4 py-2 bg-white/80 backdrop-blur-sm border-2 border-green-200 hover:border-green-400 hover:bg-green-50 text-green-700 font-bold rounded-full transition-all hover:scale-105 flex items-center gap-2 shadow-sm hover:shadow-md text-sm"
+                >
+                  <span>👕</span>
+                  <span>Hunt on Vinted</span>
+                </button>
+              </div>
 
               {/* Quick Tags */}
               <div className="flex flex-wrap justify-center gap-2.5 stagger-fade-in mt-8">

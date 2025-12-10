@@ -22,6 +22,8 @@ export interface NavContextType {
   navigateTo: (view: View, data?: any) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  marketplaceFilter: Set<string> | null;
+  setMarketplaceFilter: (filter: Set<string> | null) => void;
   selectedItem: Item | null;
   savedItems: string[]; // List of IDs
   toggleSaveItem: (id: string) => void;

@@ -10,11 +10,27 @@ interface SearchResultsProps {
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
-  const { navigateTo, searchQuery, toggleSaveItem, savedItems } = useContext(NavContext);
+  const { navigateTo, searchQuery, toggleSaveItem, savedItems, marketplaceFilter } = useContext(NavContext);
+  const [allItems, setAllItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [activeFilter, setActiveFilter] = useState('All');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filter states
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(999999);
+  const [selectedMarketplaces, setSelectedMarketplaces] = useState<Set<string>>(
+    marketplaceFilter || new Set(['eBay', 'Vinted', 'FB Marketplace', 'Craigslist'])
+  );
+  const [minConfidence, setMinConfidence] = useState<number>(0);
+  
+  // Update marketplace filter when coming from Home page
+  React.useEffect(() => {
+    if (marketplaceFilter) {
+      setSelectedMarketplaces(marketplaceFilter);
+    }
+  }, [marketplaceFilter]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -55,23 +71,34 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
         }
         
         // Transform API response to Item format
-        const items: Item[] = resultsArray.map((result, index) => ({
-          id: result.external_id || `item-${index}`,
-          listingTitle: result.title_vague,
-          realTitle: result.title_real || result.title_vague,
-          listingPrice: result.price_listed || 0,
-          realValue: result.price_estimated || 0,
-          confidenceScore: result.confidence === 'high' ? 90 : result.confidence === 'medium' ? 70 : 50,
-          marketplace: 'eBay' as any,
-          imageUrl: result.image_url || '/placeholder.jpg',
-          marketUrl: result.market_url || '#',
-          category: 'General',
-          listingDate: 'Today',
-          condition: 'Used',
-          description: result.reasoning || 'AI-analyzed item',
-          matchReason: result.reasoning || 'Identified by AI'
-        }));
+        const items: Item[] = resultsArray.map((result, index) => {
+          // Normalize marketplace name
+          let marketplace: 'eBay' | 'FB Marketplace' | 'Vinted' | 'Craigslist' = 'eBay';
+          if (result.marketplace === 'vinted') {
+            marketplace = 'Vinted';
+          } else if (result.marketplace === 'ebay') {
+            marketplace = 'eBay';
+          }
+          
+          return {
+            id: result.external_id || `item-${index}`,
+            listingTitle: result.title_vague,
+            realTitle: result.title_real || result.title_vague,
+            listingPrice: result.price_listed || 0,
+            realValue: result.price_estimated || result.price_listed || 0,
+            confidenceScore: result.confidence === 'high' ? 85 : result.confidence === 'medium' ? 65 : 50,
+            marketplace: marketplace,
+            imageUrl: result.image_url || '/placeholder.jpg',
+            marketUrl: result.market_url || '#',
+            category: 'General',
+            listingDate: 'Today',
+            condition: result.condition || 'Used',
+            description: result.reasoning || 'AI-analyzed item',
+            matchReason: result.reasoning || 'Identified by AI'
+          };
+        });
 
+        setAllItems(items);
         setFilteredItems(items);
       } catch (err: any) {
         console.error('Search error:', err);
@@ -83,6 +110,34 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
 
     fetchResults();
   }, [searchQuery, authToken]);
+
+  // Apply filters whenever filter states change
+  React.useEffect(() => {
+    let filtered = [...allItems];
+
+    // Filter by price range
+    if (minPrice > 0) {
+      filtered = filtered.filter(item => item.listingPrice >= minPrice);
+    }
+    if (maxPrice < 999999) {
+      filtered = filtered.filter(item => item.listingPrice <= maxPrice);
+    }
+
+    // Filter by marketplace
+    filtered = filtered.filter(item => selectedMarketplaces.has(item.marketplace));
+
+    // Filter by confidence
+    filtered = filtered.filter(item => item.confidenceScore >= minConfidence);
+
+    // Apply active sort filter
+    if (activeFilter === 'High Profit') {
+      filtered.sort((a, b) => (b.realValue - b.listingPrice) - (a.realValue - a.listingPrice));
+    } else if (activeFilter === 'Newest') {
+      // Already sorted by default from backend
+    }
+
+    setFilteredItems(filtered);
+  }, [allItems, minPrice, maxPrice, selectedMarketplaces, minConfidence, activeFilter]);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8">
@@ -119,9 +174,21 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
             <div className="glass-panel p-5 rounded-2xl">
               <label className="text-xs font-bold text-slate-700 mb-3 block">Price Range</label>
               <div className="flex items-center space-x-2">
-                <input type="number" placeholder="Min" className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
+                <input 
+                  type="number" 
+                  placeholder="Min" 
+                  value={minPrice || ''} 
+                  onChange={(e) => setMinPrice(Number(e.target.value) || 0)}
+                  className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" 
+                />
                 <span className="text-slate-400">-</span>
-                <input type="number" placeholder="Max" className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" />
+                <input 
+                  type="number" 
+                  placeholder="Max" 
+                  value={maxPrice === 999999 ? '' : maxPrice} 
+                  onChange={(e) => setMaxPrice(Number(e.target.value) || 999999)}
+                  className="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all" 
+                />
               </div>
             </div>
 
@@ -131,7 +198,20 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
                 {['eBay', 'FB Marketplace', 'Vinted', 'Craigslist'].map(m => (
                   <label key={m} className="flex items-center space-x-3 cursor-pointer group">
                     <div className="relative flex items-center">
-                        <input type="checkbox" className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-slate-300 shadow-sm transition-all checked:border-red-500 checked:bg-red-500 hover:shadow-md" defaultChecked />
+                        <input 
+                          type="checkbox" 
+                          checked={selectedMarketplaces.has(m)}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedMarketplaces);
+                            if (e.target.checked) {
+                              newSet.add(m);
+                            } else {
+                              newSet.delete(m);
+                            }
+                            setSelectedMarketplaces(newSet);
+                          }}
+                          className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-slate-300 shadow-sm transition-all checked:border-red-500 checked:bg-red-500 hover:shadow-md" 
+                        />
                         <svg className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" width="10" height="10" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -143,8 +223,17 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
             </div>
             
              <div className="glass-panel p-5 rounded-2xl">
-              <label className="text-xs font-bold text-slate-700 mb-3 block">Min. Confidence</label>
-               <input type="range" min="0" max="100" className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#DC2626]" />
+              <label className="text-xs font-bold text-slate-700 mb-3 block">
+                Min. Confidence: <span className="text-red-600">{minConfidence}%</span>
+              </label>
+               <input 
+                 type="range" 
+                 min="0" 
+                 max="100" 
+                 value={minConfidence}
+                 onChange={(e) => setMinConfidence(Number(e.target.value))}
+                 className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#DC2626]" 
+               />
                <div className="flex justify-between text-[10px] text-slate-400 mt-2 font-medium">
                  <span>0%</span>
                  <span>100%</span>
@@ -216,8 +305,18 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
                         </h3>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <span className="block text-2xl font-black text-slate-900">${item.listingPrice}</span>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">List Price</span>
+                        <div className="flex items-baseline gap-2">
+                          <div>
+                            <span className="block text-2xl font-black text-slate-900">${item.listingPrice}</span>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Listed</span>
+                          </div>
+                          {item.realValue > 0 && (
+                            <div className="pl-2 border-l border-slate-200">
+                              <span className="block text-xl font-black text-green-600">${item.realValue}</span>
+                              <span className="text-[10px] uppercase font-bold text-green-500 tracking-wider">Market</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -234,9 +333,11 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
                        <span className="text-slate-300">•</span>
                        <span>{item.listingDate}</span>
                      </div>
-                     <div className="font-mono text-[#DC2626] font-bold text-lg">
-                       +${(item.realValue - item.listingPrice).toLocaleString()}
-                     </div>
+                     {item.realValue > 0 && (
+                       <div className={`font-mono font-bold text-lg ${item.realValue > item.listingPrice ? 'text-[#DC2626]' : 'text-slate-400'}`}>
+                         {item.realValue > item.listingPrice ? '+' : ''}${(item.realValue - item.listingPrice).toLocaleString()}
+                       </div>
+                     )}
                   </div>
                 </div>
 

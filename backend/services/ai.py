@@ -16,6 +16,48 @@ class AIService:
         # Use Gemini 2.5 Flash - latest and most capable
         self.model = genai.GenerativeModel('models/gemini-2.5-flash')
     
+    def _generate_fallback_estimate(self, listed_price: float, category: str) -> float:
+        """Generate a reasonable fallback price estimate based on category"""
+        if category == 'fashion':
+            # Fashion items typically resell for 30-70% of retail, assume 40% markup for used
+            return round(listed_price * 1.4, 2)
+        elif category == 'electronics':
+            # Electronics depreciate, assume modest 20% markup
+            return round(listed_price * 1.2, 2)
+        elif category == 'collectibles':
+            # Collectibles can vary widely, assume 50% markup
+            return round(listed_price * 1.5, 2)
+        else:
+            # General items, assume 30% markup
+            return round(listed_price * 1.3, 2)
+    
+    def _detect_category(self, title: str) -> str:
+        """Detect item category from title"""
+        title_lower = title.lower()
+        
+        # Fashion/Clothing keywords
+        fashion_keywords = ['shirt', 't-shirt', 'tshirt', 'dress', 'jeans', 'pants', 'jacket', 
+                           'coat', 'sweater', 'hoodie', 'shoes', 'sneakers', 'boots', 'bag', 
+                           'handbag', 'purse', 'shorts', 'skirt', 'top', 'blouse', 'cardigan',
+                           'sweatshirt', 'polo', 'tank', 'camisole', 'leggings', 'tracksuit']
+        
+        # Electronics/Tech keywords
+        tech_keywords = ['camera', 'lens', 'phone', 'laptop', 'computer', 'console', 'iphone',
+                        'ipad', 'macbook', 'xbox', 'playstation', 'nintendo', 'tablet']
+        
+        # Collectibles/Vintage keywords
+        collectible_keywords = ['vintage', 'antique', 'rare', 'limited edition', 'signed',
+                               'collectible', 'memorabilia', 'watch', 'rolex', 'omega']
+        
+        if any(keyword in title_lower for keyword in fashion_keywords):
+            return 'fashion'
+        elif any(keyword in title_lower for keyword in tech_keywords):
+            return 'electronics'
+        elif any(keyword in title_lower for keyword in collectible_keywords):
+            return 'collectibles'
+        else:
+            return 'general'
+    
     async def analyze_item(
         self,
         image_urls: List[str],
@@ -34,43 +76,63 @@ class AIService:
         # Limit to top 3 images
         image_urls = image_urls[:3]
         
-        # Build prompt
-        prompt = f"""
-You are an expert product appraiser specializing in identifying specific models of secondhand items.
+        # Detect category and build specialized prompt
+        category = self._detect_category(vague_title)
+        
+        if category == 'fashion':
+            prompt = f"""
+You are an expert FASHION and CLOTHING appraiser specializing in designer brands, vintage fashion, and high-value garments.
 
 The seller listed this item as: "{vague_title}"
 
-CRITICAL: First determine if this item actually IS the product type suggested by the listing title.
-For example:
-- If searching for "camera", REJECT items like trading cards, movies, or books that merely contain the word "camera"
-- If searching for "guitar", REJECT guitar picks, strings, or instruction books
-- If searching for "watch", REJECT watch bands, batteries, or display cases
+As a fashion expert, analyze this clothing/accessory item:
 
-Only analyze items that are ACTUALLY the main product category being searched for.
+1. BRAND IDENTIFICATION: Identify the brand/designer (H&M, Zara, Gucci, Prada, Supreme, Nike, Adidas, etc.)
+2. ITEM TYPE: Specific garment type (e.g., "Oversized Graphic T-Shirt", "Leather Bomber Jacket")
+3. CONDITION ASSESSMENT: Estimate condition from description
+4. MARKET VALUE: Research typical resale prices for this brand/item
 
-If the item matches the category, provide:
-1. The specific model/brand identification (be as precise as possible)
-2. The estimated used market value in USD
-3. Your confidence level (high/medium/low)
-4. A brief explanation of key identifying features
+HIGH-VALUE FASHION INDICATORS (return high confidence):
+- Designer brands: Gucci, Prada, Louis Vuitton, Chanel, Dior, Balenciaga
+- Streetwear: Supreme, Off-White, Bape, Palace, Stussy
+- Athletic: Nike Limited Editions, Yeezy, Jordan, Rare Adidas
+- Vintage: 90s/00s designer, rare band tees, vintage denim
 
-If the item does NOT match the expected category, return:
+Return JSON:
 {{
-    "title_real": "Not a [category] - [what it actually is]",
-    "price_estimated": 0.00,
-    "confidence": "low",
-    "reasoning": "This is not actually a [category], it's [actual item type]"
+    "title_real": "Brand + Specific Item Description",
+    "price_estimated": [resale value in USD],
+    "confidence": "high/medium/low",
+    "reasoning": "Brand analysis and market value explanation"
 }}
 
-For valid items, return:
+Confidence Guidelines for Fashion:
+- HIGH: Designer/streetwear brands, rare items, clear brand identification
+- MEDIUM: Popular fast fashion brands in good condition, recognizable styles
+- LOW: Unknown brands, generic items, poor condition descriptions
+"""
+        else:
+            # Original prompt for electronics/collectibles
+            prompt = f"""
+You are an expert product appraiser specializing in electronics, collectibles, and vintage items.
+
+The seller listed this item as: "{vague_title}"
+
+Analyze if this is the actual product type (not accessories, cards, or related items).
+
+For valid items, identify:
+1. Specific model/brand
+2. Estimated used market value in USD
+3. Confidence level (high/medium/low)
+4. Key identifying features
+
+Return JSON:
 {{
     "title_real": "Specific Model Name",
     "price_estimated": 1200.00,
     "confidence": "high",
-    "reasoning": "Brief explanation of identification and valuation"
+    "reasoning": "Brief explanation"
 }}
-
-Be conservative with valuations. Only return high confidence if you're certain of the model.
 """
         
         try:
@@ -90,19 +152,28 @@ Be conservative with valuations. Only return high confidence if you're certain o
             
             analysis = json.loads(response_text)
             
+            # Ensure we have a price estimate
+            price_estimated = float(analysis.get("price_estimated", 0))
+            if price_estimated == 0:
+                # If AI didn't provide estimate, generate fallback
+                category = self._detect_category(vague_title)
+                # Assume a reasonable base price if not available
+                price_estimated = self._generate_fallback_estimate(50.0, category)
+            
             return {
                 "title_real": analysis.get("title_real", "Unable to identify"),
-                "price_estimated": float(analysis.get("price_estimated", 0)),
+                "price_estimated": price_estimated,
                 "confidence": analysis.get("confidence", "low"),
                 "reasoning": analysis.get("reasoning", "")
             }
         
         except Exception as e:
             print(f"AI Analysis Error: {str(e)}")
-            # Return safe defaults on error
+            # Return fallback estimate on error
+            category = self._detect_category(vague_title)
             return {
                 "title_real": vague_title,
-                "price_estimated": 0.0,
+                "price_estimated": self._generate_fallback_estimate(50.0, category),
                 "confidence": "low",
                 "reasoning": f"Analysis failed: {str(e)}"
             }
@@ -110,7 +181,8 @@ Be conservative with valuations. Only return high confidence if you're certain o
     async def analyze_item_with_images(
         self,
         image_urls: List[str],
-        vague_title: str
+        vague_title: str,
+        listed_price: float = 0.0
     ) -> Dict:
         """
         Enhanced version that downloads and analyzes actual images
@@ -118,41 +190,72 @@ Be conservative with valuations. Only return high confidence if you're certain o
         """
         import httpx
         
-        prompt = f"""
-You are an expert product appraiser specializing in identifying specific models of secondhand items.
+        category = self._detect_category(vague_title)
+        
+        if category == 'fashion':
+            prompt = f"""
+You are an expert FASHION APPRAISER with deep knowledge of designer brands, streetwear, vintage clothing, and luxury accessories.
 
 The seller listed this item as: "{vague_title}"
 
-CRITICAL INSTRUCTION: Look at the images and determine if this item actually IS the product type suggested by the title.
+Look at the images carefully and identify:
 
-Common mismatches to REJECT:
-- Trading cards, movies, books, or memorabilia that contain product keywords
-- Accessories, parts, or related items that are NOT the main product
-- Collectibles featuring the product name but not the actual product
+1. BRAND/DESIGNER: Look for logos, tags, labels, or distinctive brand features
+   - Luxury: Gucci, Prada, LV, Chanel, Dior, Balenciaga, Saint Laurent
+   - Streetwear: Supreme, Off-White, Bape, Palace, Stussy, Anti Social Social Club
+   - Athletic: Nike (Jordan, Dunk, Air Max), Adidas (Yeezy, Ultra Boost), New Balance
+   - Popular: Zara, H&M, Uniqlo, ASOS, Urban Outfitters, Free People
 
-Examples:
-- "Lights Camera Action" trading cards → NOT a camera, REJECT
-- Guitar pick variety pack → NOT a guitar, REJECT  
-- Watch battery → NOT a watch, REJECT
-- Camera lens cleaning kit → NOT a camera, REJECT
+2. CONDITION: Assess from images
+   - New with Tags / Like New → Higher value
+   - Gently Used / Good → Standard value  
+   - Worn / Fair → Lower value
 
-If the image shows the item does NOT match the expected product category:
+3. ITEM SPECIFICS: Type, color, size (if visible), style
+
+4. MARKET VALUE: Estimate resale value based on:
+   - Brand prestige and demand
+   - Item rarity and desirability  
+   - Condition assessment
+   - Current fashion trends
+
+VALUATION GUIDELINES:
+- Luxury designer: $100-$5000+ (high confidence if logo/tags visible)
+- Hyped streetwear: $50-$500+ (high confidence for Supreme, Off-White, etc.)
+- Premium athletic: $80-$300+ (medium-high for Jordan, Yeezy)
+- Fast fashion (good condition): $10-$50 (medium confidence)
+- Generic brands: $5-$30 (medium-low confidence)
+
+CRITICAL: ALWAYS provide a price_estimated value. If you cannot determine exact value, provide a reasonable range-based estimate.
+For unknown/generic items, estimate $15-30 based on typical secondhand clothing prices.
+
+Return JSON:
 {{
-    "title_real": "Not a [category] - [what it actually is]",
-    "price_estimated": 0.00,
-    "confidence": "low",
-    "reasoning": "Image shows this is [actual item type], not [expected category]"
+    "title_real": "[Brand] [Item Type] [Key Features]",
+    "price_estimated": [typical resale value],
+    "confidence": "high/medium/low",
+    "reasoning": "Identified [brand] from [visible features]. Condition appears [assessment]. Typical resale value: $[range]"
 }}
 
-If the image confirms it IS the correct product type, analyze carefully:
-1. The specific model/brand identification (be as precise as possible)
-2. The estimated used market value in USD (be conservative)
-3. Your confidence level (high/medium/low)
-4. Key identifying features you observed
+Confidence Levels:
+- HIGH (70-95%): Clear brand identification, visible logos/tags, recognizable designer/streetwear
+- MEDIUM (50-70%): Recognizable style or popular brand, decent condition
+- LOW (<50%): Generic/unbranded, poor condition, unclear images
+"""
+        else:
+            # Original prompt for electronics/collectibles
+            prompt = f"""
+You are an expert appraiser for electronics, collectibles, and vintage items.
 
-Return ONLY valid JSON:
+The seller listed this item as: "{vague_title}"
+
+Look at the images to verify this is the actual product (not cards, accessories, or memorabilia).
+
+If valid, identify the specific model/brand and estimate market value.
+
+Return JSON:
 {{
-    "title_real": "Exact Model Name",
+    "title_real": "Specific Model Name",
     "price_estimated": 1200.00,
     "confidence": "high",
     "reasoning": "Brief explanation"
@@ -191,18 +294,29 @@ Return ONLY valid JSON:
             
             analysis = json.loads(response_text)
             
+            # Ensure we have a price estimate
+            price_estimated = float(analysis.get("price_estimated", 0))
+            if price_estimated == 0:
+                # Use fallback based on listed price or category
+                category = self._detect_category(vague_title)
+                base_price = listed_price if listed_price > 0 else 50.0
+                price_estimated = self._generate_fallback_estimate(base_price, category)
+            
             return {
                 "title_real": analysis.get("title_real", vague_title),
-                "price_estimated": float(analysis.get("price_estimated", 0)),
+                "price_estimated": price_estimated,
                 "confidence": analysis.get("confidence", "low"),
                 "reasoning": analysis.get("reasoning", "")
             }
         
         except Exception as e:
             print(f"AI Analysis Error: {str(e)}")
+            # Use fallback estimate on error
+            category = self._detect_category(vague_title)
+            base_price = listed_price if listed_price > 0 else 50.0
             return {
                 "title_real": vague_title,
-                "price_estimated": 0.0,
+                "price_estimated": self._generate_fallback_estimate(base_price, category),
                 "confidence": "low",
                 "reasoning": f"Analysis failed: {str(e)}"
             }

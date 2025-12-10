@@ -8,6 +8,8 @@ export const NavContext = createContext<NavContextType>({
   navigateTo: () => {},
   searchQuery: '',
   setSearchQuery: () => {},
+  marketplaceFilter: null,
+  setMarketplaceFilter: () => {},
   selectedItem: null,
   savedItems: [],
   toggleSaveItem: () => {},

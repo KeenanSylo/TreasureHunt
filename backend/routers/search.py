@@ -7,6 +7,7 @@ from typing import List, Dict
 import asyncio
 
 from services.ebay import ebay_service
+from services.vinted import vinted_service
 from services.ai import ai_service
 from services.cache import cache_service
 
@@ -19,14 +20,15 @@ async def search_items(
     max_price: int = Query(100, description="Maximum price filter")
 ) -> Dict:
     """
-    Search for undervalued items using eBay and AI analysis
+    Search for undervalued items using eBay, Vinted, and AI analysis
     
     Flow:
     1. Check cache for existing results
-    2. If cache miss, search eBay for items
-    3. Analyze top items with AI
-    4. Cache results for 24 hours
-    5. Return merged data
+    2. If cache miss, search eBay AND Vinted in parallel
+    3. Merge and sort results by potential profit
+    4. Analyze top items with AI
+    5. Cache results for 24 hours
+    6. Return merged data
     """
     try:
         # 1. Check cache (TEMPORARILY DISABLED FOR TESTING)
@@ -41,14 +43,24 @@ async def search_items(
                 "results": cached_result
             }
         
-        # 2. Search eBay
-        ebay_items = await ebay_service.search_items(
-            query=q,
-            max_price=max_price,
-            limit=10
-        )
+        # 2. Search both marketplaces in parallel
+        ebay_task = ebay_service.search_items(query=q, max_price=max_price, limit=10)
+        vinted_task = vinted_service.search_items(query=q, max_price=max_price, limit=10)
         
-        if not ebay_items:
+        ebay_items, vinted_items = await asyncio.gather(ebay_task, vinted_task, return_exceptions=True)
+        
+        # Handle errors from marketplace searches
+        if isinstance(ebay_items, Exception):
+            print(f"eBay search failed: {ebay_items}")
+            ebay_items = []
+        if isinstance(vinted_items, Exception):
+            print(f"Vinted search failed: {vinted_items}")
+            vinted_items = []
+        
+        # Combine results from both marketplaces
+        all_items = (ebay_items or []) + (vinted_items or [])
+        
+        if not all_items:
             return {
                 "query": q,
                 "max_price": max_price,
@@ -56,12 +68,15 @@ async def search_items(
                 "results": []
             }
         
-        # 3. AI Analysis on top 3 items with images
+        # Sort by price (lowest first for best deals)
+        all_items.sort(key=lambda x: x.get("price_listed", 999999))
+        
+        # 3. AI Analysis on top 5 items with images (mix of both marketplaces)
         analyzed_items = []
         
         # Create analysis tasks for items with images
         analysis_tasks = []
-        for item in ebay_items[:3]:
+        for item in all_items[:5]:
             if item.get("image_url"):
                 task = analyze_item_async(item)
                 analysis_tasks.append(task)
@@ -87,7 +102,7 @@ async def search_items(
                     analyzed_items.append(result)
         
         # Add remaining items without AI analysis
-        for item in ebay_items[len(analyzed_items):]:
+        for item in all_items[len(analyzed_items):]:
             analyzed_items.append({
                 **item,
                 "title_real": item["title_vague"],
