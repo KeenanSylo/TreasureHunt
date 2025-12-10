@@ -7,6 +7,7 @@ export interface Item {
   confidenceScore: number; // 0-100
   marketplace: 'eBay' | 'FB Marketplace' | 'Vinted' | 'Craigslist';
   imageUrl: string;
+  marketUrl: string;    // Link to the actual listing
   category: string;
   listingDate: string;
   condition: string;

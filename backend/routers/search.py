@@ -29,9 +29,9 @@ async def search_items(
     5. Return merged data
     """
     try:
-        # 1. Check cache
+        # 1. Check cache (TEMPORARILY DISABLED FOR TESTING)
         cache_key = cache_service.build_search_key(q, max_price)
-        cached_result = await cache_service.get(cache_key)
+        cached_result = None  # await cache_service.get(cache_key)
         
         if cached_result:
             return {

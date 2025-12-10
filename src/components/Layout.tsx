@@ -99,6 +99,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       {item.count}
                     </span>
                   )}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Side */}
+            <div className="flex items-center space-x-2">
+              {/* Notification Bell */}
+              <button className="relative p-1.5 text-slate-600 hover:text-red-600 transition-colors group hidden sm:block">
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+              </button>
+
               {/* User Avatar */}
               <div className="hidden sm:block relative user-menu-container">
                 <button 
@@ -117,18 +129,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                       <p className="text-xs text-slate-500">Signed in as</p>
                       <p className="text-sm font-bold text-slate-900 truncate">{userEmail}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div></div>
                     <button
                       onClick={() => {
                         logout();

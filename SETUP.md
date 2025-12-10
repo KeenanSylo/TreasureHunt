@@ -75,28 +75,49 @@ pip install -r requirements.txt
 Run this SQL in your Supabase SQL Editor:
 
 ```sql
--- Create saved items table
-create table public.saved_items (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid not null,
-  external_id text not null,
-  title_vague text not null,
-  title_real text,
-  price_listed numeric,
-  price_estimated numeric,
-  profit_potential numeric generated always as (price_estimated - price_listed) stored,
-  image_url text,
-  market_url text,
-  marketplace text default 'ebay',
-  created_at timestamp with time zone default now()
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create saved_items table
+CREATE TABLE saved_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    external_id TEXT NOT NULL,
+    title_vague TEXT NOT NULL,
+    title_real TEXT,
+    price_listed DECIMAL(10, 2),
+    price_estimated DECIMAL(10, 2),
+    profit_potential DECIMAL(10, 2) GENERATED ALWAYS AS (price_estimated - price_listed) STORED,
+    confidence_score INTEGER CHECK (confidence_score >= 0 AND confidence_score <= 100),
+    image_url TEXT,
+    market_url TEXT,
+    marketplace TEXT DEFAULT 'ebay',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS
-alter table saved_items enable row level security;
+-- Create indexes for faster queries
+CREATE INDEX idx_saved_items_user_id ON saved_items(user_id);
+CREATE INDEX idx_saved_items_created_at ON saved_items(created_at DESC);
 
--- Create policy
-create policy "Users manage own items" on saved_items
-  for all using (auth.uid() = user_id);
+-- Enable Row Level Security
+ALTER TABLE saved_items ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies
+CREATE POLICY "Users can view their own saved items"
+    ON saved_items FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own saved items"
+    ON saved_items FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own saved items"
+    ON saved_items FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- IMPORTANT: If you get "permission denied" errors, run this:
+-- This grants the service role access to bypass RLS
+GRANT ALL ON saved_items TO service_role;
 ```
 
 ## 🏃 Running the App

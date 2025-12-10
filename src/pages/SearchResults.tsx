@@ -29,8 +29,33 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
       try {
         const response = await searchItems({ q: searchQuery, max_price: 1000 }, authToken || undefined);
         
+        console.log('Search response:', response);
+        
+        // Handle Redis cached response format
+        let resultsArray = response.results;
+        
+        // If results is an object with 'value' property (Redis format), parse it
+        if (resultsArray && typeof resultsArray === 'object' && 'value' in resultsArray) {
+          try {
+            resultsArray = JSON.parse((resultsArray as any).value);
+          } catch (e) {
+            console.error('Failed to parse cached results:', e);
+            setError('Failed to parse cached results');
+            setFilteredItems([]);
+            return;
+          }
+        }
+        
+        // Check if results is an array
+        if (!Array.isArray(resultsArray)) {
+          console.error('Results is not an array:', resultsArray);
+          setError('Invalid results format from server');
+          setFilteredItems([]);
+          return;
+        }
+        
         // Transform API response to Item format
-        const items: Item[] = response.results.map((result, index) => ({
+        const items: Item[] = resultsArray.map((result, index) => ({
           id: result.external_id || `item-${index}`,
           listingTitle: result.title_vague,
           realTitle: result.title_real || result.title_vague,
@@ -39,6 +64,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({ authToken }) => {
           confidenceScore: result.confidence === 'high' ? 90 : result.confidence === 'medium' ? 70 : 50,
           marketplace: 'eBay' as any,
           imageUrl: result.image_url || '/placeholder.jpg',
+          marketUrl: result.market_url || '#',
           category: 'General',
           listingDate: 'Today',
           condition: 'Used',

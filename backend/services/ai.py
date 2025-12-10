@@ -13,7 +13,8 @@ class AIService:
     def __init__(self):
         api_key = os.getenv("GOOGLE_API_KEY")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        # Use Gemini 2.5 Flash - latest and most capable
+        self.model = genai.GenerativeModel('models/gemini-2.5-flash')
     
     async def analyze_item(
         self,
@@ -39,13 +40,29 @@ You are an expert product appraiser specializing in identifying specific models 
 
 The seller listed this item as: "{vague_title}"
 
-Analyze the provided image(s) and provide:
+CRITICAL: First determine if this item actually IS the product type suggested by the listing title.
+For example:
+- If searching for "camera", REJECT items like trading cards, movies, or books that merely contain the word "camera"
+- If searching for "guitar", REJECT guitar picks, strings, or instruction books
+- If searching for "watch", REJECT watch bands, batteries, or display cases
+
+Only analyze items that are ACTUALLY the main product category being searched for.
+
+If the item matches the category, provide:
 1. The specific model/brand identification (be as precise as possible)
 2. The estimated used market value in USD
 3. Your confidence level (high/medium/low)
 4. A brief explanation of key identifying features
 
-Return your response in valid JSON format:
+If the item does NOT match the expected category, return:
+{{
+    "title_real": "Not a [category] - [what it actually is]",
+    "price_estimated": 0.00,
+    "confidence": "low",
+    "reasoning": "This is not actually a [category], it's [actual item type]"
+}}
+
+For valid items, return:
 {{
     "title_real": "Specific Model Name",
     "price_estimated": 1200.00,
@@ -54,7 +71,6 @@ Return your response in valid JSON format:
 }}
 
 Be conservative with valuations. Only return high confidence if you're certain of the model.
-If you cannot identify the item precisely, return confidence as "low" and a generic description.
 """
         
         try:
@@ -107,7 +123,28 @@ You are an expert product appraiser specializing in identifying specific models 
 
 The seller listed this item as: "{vague_title}"
 
-Analyze the provided image(s) carefully and provide:
+CRITICAL INSTRUCTION: Look at the images and determine if this item actually IS the product type suggested by the title.
+
+Common mismatches to REJECT:
+- Trading cards, movies, books, or memorabilia that contain product keywords
+- Accessories, parts, or related items that are NOT the main product
+- Collectibles featuring the product name but not the actual product
+
+Examples:
+- "Lights Camera Action" trading cards → NOT a camera, REJECT
+- Guitar pick variety pack → NOT a guitar, REJECT  
+- Watch battery → NOT a watch, REJECT
+- Camera lens cleaning kit → NOT a camera, REJECT
+
+If the image shows the item does NOT match the expected product category:
+{{
+    "title_real": "Not a [category] - [what it actually is]",
+    "price_estimated": 0.00,
+    "confidence": "low",
+    "reasoning": "Image shows this is [actual item type], not [expected category]"
+}}
+
+If the image confirms it IS the correct product type, analyze carefully:
 1. The specific model/brand identification (be as precise as possible)
 2. The estimated used market value in USD (be conservative)
 3. Your confidence level (high/medium/low)

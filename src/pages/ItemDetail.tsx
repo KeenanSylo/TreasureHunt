@@ -99,7 +99,7 @@ export const ItemDetail: React.FC<ItemDetailProps> = ({ item: selectedItem, auth
                    <span className="text-slate-400 text-xs font-bold uppercase">Listed Price</span>
                    <p className="text-3xl font-black text-slate-900">${selectedItem.listingPrice}</p>
                 </div>
-                <Button variant="outline" icon={ExternalLink} onClick={() => window.open('https://google.com', '_blank')} className="bg-white/80 hover:bg-white">
+                <Button variant="outline" icon={ExternalLink} onClick={() => window.open(selectedItem.marketUrl, '_blank')} className="bg-white/80 hover:bg-white">
                    Open Listing
                 </Button>
               </div>
