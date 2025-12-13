@@ -163,6 +163,9 @@ class VintedService:
             if "user" in item and isinstance(item["user"], dict):
                 seller = item["user"].get("login")
             
+            # BUNDLE BREAKER: Check if this is a bundle/lot (Vinted doesn't have lot_size field)
+            is_bundle = any(keyword in title.lower() for keyword in ["bundle", "lot", "job lot", "collection"])
+            
             return {
                 "external_id": str(item_id) if item_id else None,
                 "title_vague": title,
@@ -172,7 +175,8 @@ class VintedService:
                 "marketplace": "vinted",
                 "condition": "Used",
                 "brand": brand,
-                "seller": seller
+                "seller": seller,
+                "lot_size": None  # Vinted doesn't provide this field
             }
         
         except Exception as e:

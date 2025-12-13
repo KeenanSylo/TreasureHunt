@@ -180,6 +180,7 @@ class EbayService:
     def _format_item(self, item: Dict) -> Dict:
         """
         Format eBay item to standardized structure
+        BUNDLE BREAKER: Extract lot_size/quantity for bundles
         """
         # Extract image URL (prefer first image)
         image_url = None
@@ -193,6 +194,9 @@ class EbayService:
         if item.get("price"):
             price = float(item["price"].get("value", 0))
         
+        # BUNDLE BREAKER: Extract lot size/quantity if available
+        lot_size = item.get("buyingOptions", {}).get("quantity") or item.get("lotSize")
+        
         return {
             "external_id": item.get("itemId"),
             "title_vague": item.get("title"),
@@ -201,7 +205,8 @@ class EbayService:
             "market_url": item.get("itemWebUrl"),
             "marketplace": "ebay",
             "condition": item.get("condition"),
-            "seller": item.get("seller", {}).get("username")
+            "seller": item.get("seller", {}).get("username"),
+            "lot_size": lot_size
         }
 
 

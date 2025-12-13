@@ -322,5 +322,147 @@ Return JSON:
             }
 
 
+    async def analyze_bundle(
+        self,
+        image_urls: List[str],
+        bundle_title: str,
+        listed_price: float = 0.0,
+        search_category: str = ""
+    ) -> Dict:
+        """
+        BUNDLE BREAKER: Analyze a job lot/bundle to identify hidden valuable items
+        
+        Args:
+            image_urls: List of image URLs showing the bundle
+            bundle_title: Seller's listing title
+            listed_price: Current listing price
+            search_category: Original search query (e.g., "Camera")
+        
+        Returns:
+            Dict with main_item, hidden_gems, and estimated_breakup_value
+        """
+        prompt = f"""
+You are an EXPERT APPRAISER specializing in analyzing JOB LOTS, BUNDLES, and COLLECTIONS of used items.
+
+The seller listed this bundle as: "{bundle_title}"
+Listed price: ${listed_price}
+Search category: "{search_category}"
+
+Your mission: Find valuable items HIDDEN in this pile that the seller may have overlooked or undervalued.
+
+ANALYZE THE IMAGES:
+
+1. IDENTIFY DISTINCT ITEMS:
+   - Look for individual items in the pile/collection
+   - Count how many separate pieces you can see
+   - Focus on items related to: {search_category}
+
+2. FIND HIDDEN GEMS (High-Value Items):
+   - Camera bundles: Look for specific LENSES (Canon L-series, Nikon Gold Ring, Zeiss), camera BODIES (model numbers), FILTERS, professional accessories
+   - Electronics: Specific model numbers, brand names, vintage items
+   - Fashion: Designer labels, brand tags, luxury items
+   - Collectibles: Rare items, vintage pieces, signed items
+   - Tools: Professional-grade brands (Snap-on, Mac Tools, Festool)
+   - Video games: Specific valuable titles, limited editions, sealed items
+
+3. IGNORE GENERIC FILLER:
+   - Don't value generic cables, common accessories, broken items
+   - Focus on items that have resale value
+
+4. ESTIMATE BREAKUP VALUE:
+   - Research typical resale prices for EACH valuable item you identify
+   - Add up individual values: Item 1 ($X) + Item 2 ($Y) + Item 3 ($Z) = Total
+   - Be realistic but optimistic - we're looking for deals where breakup > listing price
+
+EXAMPLE OUTPUT for Camera Bundle:
+{{
+    "main_item": "Canon EOS Camera Bundle with Lenses",
+    "hidden_gems": [
+        "Canon EF 24-70mm f/2.8L II USM Lens (Worth $1,400)",
+        "Canon EF 70-200mm f/4L USM Lens (Worth $600)",
+        "Canon 50mm f/1.8 STM Lens (Worth $125)",
+        "Hoya UV Filter 77mm (Worth $30)"
+    ],
+    "estimated_breakup_value": 2155.00,
+    "confidence": "high",
+    "reasoning": "Identified 2 professional L-series Canon lenses in excellent condition based on red ring markings visible in photos. These alone are worth $2,000+. Listed bundle price of $400 represents 5x profit potential."
+}}
+
+CRITICAL RULES:
+- ALWAYS return a valid JSON object
+- hidden_gems must be a LIST of STRINGS describing specific valuable items with estimated values
+- estimated_breakup_value should be the SUM of all individual item values
+- If you can't identify valuable items, return breakup value = 0 and empty hidden_gems list
+- Focus on SPECIFIC identifiable items, not generic descriptions
+
+Return JSON:
+{{
+    "main_item": "Brief description of the bundle",
+    "hidden_gems": ["Specific Item 1 (Worth $X)", "Specific Item 2 (Worth $Y)"],
+    "estimated_breakup_value": [total value if sold separately],
+    "confidence": "high/medium/low",
+    "reasoning": "Explain what valuable items you found and why this is/isn't a good deal"
+}}
+"""
+        
+        try:
+            import httpx
+            
+            # Download images
+            image_parts = []
+            async with httpx.AsyncClient() as client:
+                for url in image_urls[:5]:  # Analyze up to 5 images for bundles
+                    try:
+                        response = await client.get(url, timeout=5.0)
+                        if response.status_code == 200:
+                            image_parts.append({
+                                'mime_type': response.headers.get('content-type', 'image/jpeg'),
+                                'data': response.content
+                            })
+                    except Exception as e:
+                        print(f"Failed to download bundle image {url}: {e}")
+                        continue
+            
+            if not image_parts:
+                return {
+                    "main_item": bundle_title,
+                    "hidden_gems": [],
+                    "estimated_breakup_value": 0.0,
+                    "confidence": "low",
+                    "reasoning": "No images available for bundle analysis"
+                }
+            
+            # Generate content with images
+            response = self.model.generate_content([prompt] + image_parts)
+            response_text = response.text.strip()
+            
+            # Extract JSON
+            if "```json" in response_text:
+                response_text = response_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in response_text:
+                response_text = response_text.split("```")[1].split("```")[0].strip()
+            
+            analysis = json.loads(response_text)
+            
+            # Ensure we have required fields
+            return {
+                "main_item": analysis.get("main_item", bundle_title),
+                "hidden_gems": analysis.get("hidden_gems", []),
+                "estimated_breakup_value": float(analysis.get("estimated_breakup_value", 0)),
+                "confidence": analysis.get("confidence", "low"),
+                "reasoning": analysis.get("reasoning", "")
+            }
+        
+        except Exception as e:
+            print(f"Bundle AI Analysis Error: {str(e)}")
+            return {
+                "main_item": bundle_title,
+                "hidden_gems": [],
+                "estimated_breakup_value": 0.0,
+                "confidence": "low",
+                "reasoning": f"Bundle analysis failed: {str(e)}"
+            }
+
+
 # Singleton instance
 ai_service = AIService()
